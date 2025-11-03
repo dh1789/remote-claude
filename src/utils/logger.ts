@@ -162,3 +162,11 @@ export function setLogLevel(level: LogLevel): void {
   });
   info(`Log level changed to: ${level}`);
 }
+
+/**
+ * Clear logger instance (for testing)
+ * Clear the singleton logger instance
+ */
+export function clearLoggerInstance(): void {
+  logger = null;
+}
