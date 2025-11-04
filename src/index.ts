@@ -19,7 +19,6 @@ import { JobType } from './types';
 
 // Command handlers
 import { helpHandler } from './bot/commands/help';
-import { setupHandler } from './bot/commands/setup';
 import { unsetupHandler } from './bot/commands/unsetup';
 import { snippetHandler } from './bot/commands/snippet';
 
@@ -97,41 +96,9 @@ class RemoteClaudeApp {
     });
 
     // /setup 명령어
-    this.app.command('/setup', async ({ command, ack, say, client }) => {
+    this.app.command('/setup', async ({ command, ack, say }) => {
       await ack();
-      const args = command.text.trim().split(/\s+/);
-      const response = await setupHandler({
-        channelId: command.channel_id,
-        userId: command.user_id,
-        args,
-      });
-
-      // 설정 성공 시 채널 이름 변경 시도
-      let finalResponse = response;
-      if (response.startsWith('✅') && args.length >= 1) {
-        const projectName = args[0];
-        const channelName = projectName.toLowerCase();
-
-        try {
-          await client.conversations.rename({
-            channel: command.channel_id,
-            name: channelName,
-          });
-          logger.info(`Channel ${command.channel_id} renamed to ${channelName}`);
-          finalResponse = response.replace(
-            '\n\n이제',
-            `\n✅ *채널 이름:* \`${channelName}\`\n\n이제`
-          );
-        } catch (error) {
-          logger.warn(`Failed to rename channel: ${error}`);
-          finalResponse = response.replace(
-            '\n\n이제',
-            `\n⚠️ *채널 이름 변경 실패* (이미 사용 중이거나 권한 부족)\n\n이제`
-          );
-        }
-      }
-
-      await say(finalResponse);
+      await this.handleSetupCommand(command.channel_id, command.user_id, command.text, say);
     });
 
     // /unsetup 명령어
@@ -145,10 +112,10 @@ class RemoteClaudeApp {
       await say(response);
     });
 
-    // /status 명령어 - 작업 큐 상태 통합
-    this.app.command('/status', async ({ command, ack, say }) => {
+    // /state 명령어 - 작업 큐 상태 통합
+    this.app.command('/state', async ({ command, ack, say }) => {
       await ack();
-      await this.handleStatusCommand(command.channel_id, command.user_id, say);
+      await this.handleStateCommand(command.channel_id, command.user_id, say);
     });
 
     // /snippet 명령어
@@ -242,6 +209,91 @@ class RemoteClaudeApp {
     });
 
     logger.info('Message listeners registered');
+  }
+
+  /**
+   * /setup 명령어 처리
+   * Handle /setup command
+   */
+  private async handleSetupCommand(
+    channelId: string,
+    userId: string,
+    text: string,
+    say: any
+  ): Promise<void> {
+    const logger = getLogger();
+    logger.info(`Setup command from user ${userId} in channel ${channelId}`);
+
+    const args = text.trim().split(/\s+/);
+
+    // 인자 검증
+    if (args.length < 2) {
+      await say(
+        '*사용법 오류*\n\n' +
+        '사용법: `/setup <project-name> <project-path>`\n\n' +
+        '*예시:*\n' +
+        '• `/setup my-app /Users/username/projects/my-app`\n' +
+        '• `/setup frontend ~/workspace/project/frontend`\n\n' +
+        '*설명:*\n' +
+        '• `<project-name>`: 프로젝트 이름 (알파벳, 숫자, -, _ 만 사용)\n' +
+        '• `<project-path>`: 프로젝트 디렉토리 절대 경로'
+      );
+      return;
+    }
+
+    const projectName = args[0];
+    const projectPath = args.slice(1).join(' '); // 경로에 공백이 있을 수 있음
+
+    try {
+      const {
+        validateProjectName,
+        validateProjectPath,
+        validatePathConflicts,
+        toAbsolutePath,
+      } = await import('./utils/path');
+
+      // 1. 프로젝트 이름 검증
+      validateProjectName(projectName);
+
+      // 2. 프로젝트 경로 검증
+      validateProjectPath(projectPath);
+
+      // 3. 경로 충돌 검증 (현재 채널의 경로는 제외)
+      const existingChannel = this.configStore.getChannel(channelId);
+      const allPaths = this.configStore.getAllProjectPaths();
+      const otherPaths = existingChannel
+        ? allPaths.filter((p) => p !== existingChannel.projectPath)
+        : allPaths;
+      validatePathConflicts(projectPath, otherPaths);
+
+      // 4. tmux 세션 이름 생성
+      const tmuxSession = `claude-${channelId}`;
+
+      // 5. 채널 설정 저장
+      const absolutePath = toAbsolutePath(projectPath);
+      this.configStore.setChannel(channelId, projectName, absolutePath, tmuxSession);
+
+      // 6. 성공 메시지 반환
+      const isUpdate = existingChannel !== undefined;
+      const action = isUpdate ? '업데이트' : '설정';
+
+      await say(
+        `✅ *채널 ${action} 완료*\n\n` +
+        `*프로젝트:* ${projectName}\n` +
+        `*경로:* \`${absolutePath}\`\n` +
+        `*tmux 세션:* \`${tmuxSession}\`\n\n` +
+        `이제 \`/run\` 또는 \`/ask\` 명령어로 Claude Code에 작업을 요청할 수 있습니다.\n` +
+        `자주 사용하는 프롬프트는 \`/snippet add\` 로 등록하세요.`
+      );
+    } catch (error) {
+      logger.error(`Setup failed: ${error}`);
+
+      if (error instanceof Error) {
+        await say(`❌ *설정 실패*\n\n${error.message}`);
+      } else {
+        await say('❌ *설정 실패*\n\n알 수 없는 오류가 발생했습니다.');
+      }
+    }
   }
 
   /**
@@ -444,10 +496,10 @@ class RemoteClaudeApp {
   }
 
   /**
-   * /status 명령어 처리
-   * Handle /status command with queue status integration
+   * /state 명령어 처리
+   * Handle /state command with queue status integration
    */
-  private async handleStatusCommand(
+  private async handleStateCommand(
     channelId: string,
     userId: string,
     say: any

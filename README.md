@@ -64,7 +64,7 @@ npm install
 | `/help` | 사용 가능한 명령어 목록 |
 | `/setup` | 채널과 프로젝트 연결 |
 | `/unsetup` | 채널 설정 해제 |
-| `/status` | 채널 및 작업 큐 상태 |
+| `/state` | 채널 및 작업 큐 상태 |
 | `/snippet` | 스니펫 관리 (list/add/edit/delete/show) |
 | `/run` | 스니펫 실행 |
 | `/ask` | 즉석 프롬프트 실행 |
@@ -193,7 +193,7 @@ Slack 채널에서 프로젝트와 연결:
 ### 4. 상태 확인
 
 ```
-/status
+/state
 ```
 
 출력 예시:
