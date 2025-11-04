@@ -92,7 +92,7 @@ PRD: `0001-prd-interactive-dsl-mode.md` 기반
   - [x] 3.5 감지 시 제안 메시지 생성 로직 - Task 2.8에서 구현됨 (formatters.ts)
   - [x] 3.6 Slack 알림 전송 통합 - Task 2.9에서 구현됨 (orchestrator.ts)
 
-- [ ] 4.0 4단계 입력 처리 파이프라인 구현
+- [x] 4.0 4단계 입력 처리 파이프라인 구현
   - [x] 4.1 `src/handlers/input-processor.ts` 파일 생성
   - [x] 4.2 1단계 구현: Slack 네이티브 명령 감지 및 패스스루
   - [x] 4.3 2단계 구현: 봇 메타 명령 처리 (`/setup`, `/status`, `/help`, `/stop`)
@@ -106,13 +106,13 @@ PRD: `0001-prd-interactive-dsl-mode.md` 기반
   - [x] 4.11 `src/bot/commands/ask.ts` 수정 - /ask deprecated 표시
 
 - [ ] 5.0 오류 처리 및 사용자 가이드 구현
-  - [ ] 5.1 `src/dsl/errors.ts` 파일 생성
-  - [ ] 5.2 혼합 문자 에러 클래스 정의 (`MixedCharacterError`)
-  - [ ] 5.3 혼합 문자 에러 메시지 템플릿 작성 (키 문자 vs 일반 문자 구분 표시)
-  - [ ] 5.4 사용자 가이드 메시지 생성 (해결 방법 제시)
-  - [ ] 5.5 tmux 실패 에러 처리 로직
-  - [ ] 5.6 타임아웃 에러 처리 로직
-  - [ ] 5.7 각 에러 타입별 Slack 메시지 포맷 정의
+  - [x] 5.1 `src/dsl/errors.ts` 파일 생성
+  - [x] 5.2 혼합 문자 에러 클래스 정의 (`MixedCharacterError`)
+  - [x] 5.3 혼합 문자 에러 메시지 템플릿 작성 (키 문자 vs 일반 문자 구분 표시)
+  - [x] 5.4 사용자 가이드 메시지 생성 (해결 방법 제시) - getUserGuide() 메서드
+  - [x] 5.5 tmux 실패 에러 처리 로직 - TmuxCommandError 클래스
+  - [x] 5.6 타임아웃 에러 처리 로직 - TmuxTimeoutError 클래스
+  - [x] 5.7 각 에러 타입별 Slack 메시지 포맷 정의 - Task 2.8, 2.9에서 구현됨
 
 - [ ] 6.0 유닛 테스트 구현
   - [ ] 6.1 `src/dsl/parser.test.ts` 생성 및 `parseInteractiveCommand()` 테스트
