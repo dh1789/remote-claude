@@ -97,7 +97,7 @@ class RemoteClaudeApp {
     });
 
     // /setup 명령어
-    this.app.command('/setup', async ({ command, ack, say }) => {
+    this.app.command('/setup', async ({ command, ack, say, client }) => {
       await ack();
       const args = command.text.trim().split(/\s+/);
       const response = await setupHandler({
@@ -105,7 +105,33 @@ class RemoteClaudeApp {
         userId: command.user_id,
         args,
       });
-      await say(response);
+
+      // 설정 성공 시 채널 이름 변경 시도
+      let finalResponse = response;
+      if (response.startsWith('✅') && args.length >= 1) {
+        const projectName = args[0];
+        const channelName = projectName.toLowerCase();
+
+        try {
+          await client.conversations.rename({
+            channel: command.channel_id,
+            name: channelName,
+          });
+          logger.info(`Channel ${command.channel_id} renamed to ${channelName}`);
+          finalResponse = response.replace(
+            '\n\n이제',
+            `\n✅ *채널 이름:* \`${channelName}\`\n\n이제`
+          );
+        } catch (error) {
+          logger.warn(`Failed to rename channel: ${error}`);
+          finalResponse = response.replace(
+            '\n\n이제',
+            `\n⚠️ *채널 이름 변경 실패* (이미 사용 중이거나 권한 부족)\n\n이제`
+          );
+        }
+      }
+
+      await say(finalResponse);
     });
 
     // /unsetup 명령어
