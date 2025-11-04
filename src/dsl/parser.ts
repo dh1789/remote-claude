@@ -5,8 +5,6 @@
 
 import { getLogger } from '../utils/logger';
 
-const logger = getLogger();
-
 /**
  * 키 타입 정의
  * Key type definition
@@ -107,6 +105,7 @@ interface MessageSegment {
  * - "no backticks" → [{ isBacktick: false, content: "no backticks" }]
  */
 function splitIntoSegments(message: string): MessageSegment[] {
+  const logger = getLogger();
   const segments: MessageSegment[] = [];
   let lastIndex = 0;
 
@@ -176,6 +175,7 @@ function splitIntoSegments(message: string): MessageSegment[] {
  * 3. 키 매핑 문자와 일반 문자 혼합 → Error 발생
  */
 export function isKeySequence(content: string): boolean {
+  const logger = getLogger();
   logger.debug(`isKeySequence called with: ${content}`);
 
   // 빈 문자열은 텍스트로 처리
@@ -218,6 +218,7 @@ export function isKeySequence(content: string): boolean {
  * - "`ddx`" → Error: 혼합 문자 에러
  */
 export function parseInteractiveCommand(message: string): ParseResult {
+  const logger = getLogger();
   logger.debug(`parseInteractiveCommand called with: ${message}`);
 
   const segments: ParsedSegment[] = [];

@@ -105,7 +105,7 @@ PRD: `0001-prd-interactive-dsl-mode.md` 기반
   - [x] 4.10 `src/queue/orchestrator.ts`에 입력 처리 파이프라인 통합 - Task 2.9에서 구현됨
   - [x] 4.11 `src/bot/commands/ask.ts` 수정 - /ask deprecated 표시
 
-- [ ] 5.0 오류 처리 및 사용자 가이드 구현
+- [x] 5.0 오류 처리 및 사용자 가이드 구현
   - [x] 5.1 `src/dsl/errors.ts` 파일 생성
   - [x] 5.2 혼합 문자 에러 클래스 정의 (`MixedCharacterError`)
   - [x] 5.3 혼합 문자 에러 메시지 템플릿 작성 (키 문자 vs 일반 문자 구분 표시)
@@ -115,14 +115,14 @@ PRD: `0001-prd-interactive-dsl-mode.md` 기반
   - [x] 5.7 각 에러 타입별 Slack 메시지 포맷 정의 - Task 2.8, 2.9에서 구현됨
 
 - [ ] 6.0 유닛 테스트 구현
-  - [ ] 6.1 `src/dsl/parser.test.ts` 생성 및 `parseInteractiveCommand()` 테스트
-    - [ ] 6.1.1 정상 경로: `ddd` → [Down, Down, Down]
-    - [ ] 6.1.2 경계 조건: `ddd` text `e` → [Down×3, "text", Enter]
-    - [ ] 6.1.3 예외 케이스: `ddx` → 혼합 문자 에러 발생
-  - [ ] 6.2 `isKeySequence()` 테스트 추가
-    - [ ] 6.2.1 정상 경로: "ddd" → true
-    - [ ] 6.2.2 경계 조건: "console" → false
-    - [ ] 6.2.3 예외 케이스: "ddx" → 혼합 감지 에러
+  - [x] 6.1 `src/dsl/__tests__/parser.test.ts` 생성 및 `parseInteractiveCommand()` 테스트
+    - [x] 6.1.1 정상 경로: `ddd` → [Down, Down, Down]
+    - [x] 6.1.2 경계 조건: `ddd` text `e` → [Down×3, "text", Enter]
+    - [x] 6.1.3 예외 케이스: `ddx` → 혼합 문자 에러 발생
+  - [x] 6.2 `isKeySequence()` 테스트 추가
+    - [x] 6.2.1 정상 경로: "ddd" → true
+    - [x] 6.2.2 경계 조건: "npm" → false
+    - [x] 6.2.3 예외 케이스: "ddx" → 혼합 감지 에러
   - [ ] 6.3 `src/tmux/executor.ts`에 `sendArrowKey()` 테스트 추가
     - [ ] 6.3.1 정상 경로: Down 키 성공적으로 전송
     - [ ] 6.3.2 경계 조건: 4가지 방향 모두 테스트 (Right, Left, Up, Down)
