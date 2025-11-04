@@ -65,9 +65,13 @@ export const setupHandler: SlackCommandHandler = async ({
     // 3. Config Store 초기화
     const configStore = new ConfigStore(envConfig.configDir);
 
-    // 4. 경로 충돌 검증
-    const existingPaths = configStore.getAllProjectPaths();
-    validatePathConflicts(projectPath, existingPaths);
+    // 4. 경로 충돌 검증 (현재 채널의 경로는 제외)
+    const existingChannel = configStore.getChannel(channelId);
+    const allPaths = configStore.getAllProjectPaths();
+    const otherPaths = existingChannel
+      ? allPaths.filter((p) => p !== existingChannel.projectPath)
+      : allPaths;
+    validatePathConflicts(projectPath, otherPaths);
 
     // 5. tmux 세션 이름 생성
     const tmuxSession = generateTmuxSessionName(channelId);
@@ -77,7 +81,7 @@ export const setupHandler: SlackCommandHandler = async ({
     configStore.setChannel(channelId, projectName, absolutePath, tmuxSession);
 
     // 7. 성공 메시지 반환
-    const isUpdate = existingPaths.includes(absolutePath);
+    const isUpdate = existingChannel !== undefined;
     const action = isUpdate ? '업데이트' : '설정';
 
     return (
