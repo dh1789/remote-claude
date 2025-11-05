@@ -20,13 +20,11 @@ import {
   formatDslGuide,
   formatInteractivePromptHelp,
   formatDslMixedCharError,
-  formatDslExecutionResult,
   formatDslExecutionError,
 } from '../bot/formatters';
 import {
   parseInteractiveCommand,
   ParseResult,
-  KEY_CHARS,
 } from '../dsl/parser';
 import {
   executeCommandSequence,
