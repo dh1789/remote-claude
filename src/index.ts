@@ -648,7 +648,7 @@ class RemoteClaudeApp {
     // 출력 라인 수 파싱 (기본값: 30줄)
     // Parse output line count (default: 30 lines)
     const args = text.trim().split(/\s+/);
-    let lineCount = args.length > 1 ? parseInt(args[1], 10) : 30;
+    let lineCount = args.length > 0 && args[0] ? parseInt(args[0], 10) : 30;
 
     // 유효성 검증 (1-200 범위)
     // Validate range (1-200)
