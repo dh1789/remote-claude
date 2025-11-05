@@ -701,11 +701,18 @@ class RemoteClaudeApp {
         const captureResult = await capturePane(channelConfig.tmuxSession, -10000);
 
         if (captureResult.success) {
+          // 디버깅: 원본 데이터 확인
+          logger.debug(`[/state] Captured ${captureResult.output?.length || 0} characters`);
+          logger.debug(`[/state] Raw output sample (last 200 chars): ${captureResult.output?.slice(-200) || 'empty'}`);
+
           const processedOutput = processCaptureResult(captureResult.output || '');
-          // Slack 메시지 포맷팅에서 backtick이 사라지는 문제 방지
-          // Prevent backtick removal in Slack message formatting
-          const escapedSummary = processedOutput.summary.replace(/`/g, '\\`');
-          statusMessage += '```\n' + escapedSummary + '\n```';
+
+          logger.debug(`[/state] Processed summary length: ${processedOutput.summary.length}`);
+          logger.debug(`[/state] Summary backtick count: ${(processedOutput.summary.match(/`/g) || []).length}`);
+
+          // mrkdwn=false이므로 escape 불필요
+          // No need to escape since mrkdwn is disabled
+          statusMessage += '```\n' + processedOutput.summary + '\n```';
         } else {
           statusMessage += `⚠️ 화면 캡처 실패: ${captureResult.error || '알 수 없는 오류'}`;
         }
@@ -714,7 +721,12 @@ class RemoteClaudeApp {
         statusMessage += `⚠️ 화면 캡처 실패: ${captureError instanceof Error ? captureError.message : '알 수 없는 오류'}`;
       }
 
-      await say(statusMessage);
+      // mrkdwn: false로 코드 블록 내부 backtick 보존
+      // Disable mrkdwn to preserve backticks inside code blocks
+      await say({
+        text: statusMessage,
+        mrkdwn: false,
+      });
     } catch (error) {
       logger.error(`Status command failed: ${error}`);
       await say(
