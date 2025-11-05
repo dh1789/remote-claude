@@ -15,7 +15,7 @@ import { StateManager } from './state/manager';
 import { TmuxManager } from './tmux/manager';
 import { JobOrchestrator } from './queue/orchestrator';
 import { recoverState, startPeriodicCleanup } from './state/recovery';
-import { JobType } from './types';
+import { JobType, ChannelConfig } from './types';
 
 // Command handlers
 import { helpHandler } from './bot/commands/help';
@@ -162,7 +162,7 @@ class RemoteClaudeApp {
 
     logger.info('Registering message listeners...');
 
-    // 채널 메시지 수신 (y/n 대화형 응답 처리)
+    // 채널 메시지 수신 (4단계 입력 처리 파이프라인 통합)
     this.app.message(async ({ message, say }) => {
       // 메시지 타입 검증
       if (message.subtype || !('text' in message) || !('channel' in message)) {
@@ -170,45 +170,174 @@ class RemoteClaudeApp {
       }
 
       const channelId = message.channel;
-      const text = message.text?.trim().toLowerCase();
-
-      // y/n 응답 확인
-      if (text !== 'y' && text !== 'n') {
-        return;
-      }
-
-      // 대화형 응답 대기 중인지 확인
-      if (!this.stateManager.isWaitingForResponse(channelId)) {
-        return;
-      }
+      const text = message.text?.trim() || '';
 
       // 채널 설정 확인
       const channelConfig = this.configStore.getChannel(channelId);
       if (!channelConfig) {
-        logger.warn(`Message from unconfigured channel: ${channelId}`);
+        logger.debug(`Message from unconfigured channel: ${channelId}`);
         return;
       }
 
-      logger.info(
-        `Received interactive response '${text}' from channel ${channelId}`
+      // 대화형 응답 대기 중인 경우 y/n 응답 처리
+      if (this.stateManager.isWaitingForResponse(channelId)) {
+        const lowerText = text.toLowerCase();
+        if (lowerText === 'y' || lowerText === 'n') {
+          logger.info(
+            `Received interactive response '${lowerText}' from channel ${channelId}`
+          );
+
+          try {
+            await this.orchestrator.handleInteractiveResponse(
+              channelId,
+              channelConfig,
+              lowerText as 'y' | 'n'
+            );
+          } catch (error) {
+            logger.error(`Failed to handle interactive response: ${error}`);
+            await say(
+              `❌ 응답 처리 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
+            );
+          }
+          return;
+        }
+      }
+
+      // 4단계 입력 처리 파이프라인
+      const { processInput } = await import('./handlers/input-processor');
+      const result = processInput(text);
+
+      logger.debug(
+        `Input processing result: stage=${result.stage}, action=${result.action}, shouldProcess=${result.shouldProcess}`
       );
 
-      try {
-        // 오케스트레이터를 통해 응답 처리
-        await this.orchestrator.handleInteractiveResponse(
-          channelId,
-          channelConfig,
-          text as 'y' | 'n'
-        );
-      } catch (error) {
-        logger.error(`Failed to handle interactive response: ${error}`);
-        await say(
-          `❌ 응답 처리 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
-        );
+      // 처리할 필요 없는 입력
+      if (!result.shouldProcess) {
+        return;
+      }
+
+      // Stage에 따라 처리
+      switch (result.stage) {
+        case 1: // Slack 네이티브 명령 - Slack이 처리
+          logger.debug('Slack native command detected, passing through');
+          return;
+
+        case 2: // 봇 메타 명령 - slash command로 이미 처리됨
+          logger.debug('Bot meta command detected, already handled by slash command');
+          return;
+
+        case 3: // DSL 명령 - DSL 처리기로 전달
+          logger.info(`DSL command detected in channel ${channelId}`);
+          try {
+            await this.handleDslInput(channelId, channelConfig, text, say);
+          } catch (error) {
+            logger.error(`Failed to handle DSL command: ${error}`);
+            await say(
+              `❌ DSL 명령 처리 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
+            );
+          }
+          break;
+
+        case 4: // 기본 입력 - Claude Code로 전송 (FR10)
+          logger.info(`Default input detected in channel ${channelId}: ${result.processedInput?.slice(0, 50)}...`);
+          try {
+            await this.handleDefaultInput(channelId, channelConfig, result.processedInput || '', say);
+          } catch (error) {
+            logger.error(`Failed to handle default input: ${error}`);
+            await say(
+              `❌ 입력 처리 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
+            );
+          }
+          break;
       }
     });
 
     logger.info('Message listeners registered');
+  }
+
+  /**
+   * DSL 입력 처리
+   * Handle DSL input
+   */
+  private async handleDslInput(
+    channelId: string,
+    channelConfig: ChannelConfig,
+    text: string,
+    say: any
+  ): Promise<void> {
+    const logger = getLogger();
+
+    // DSL 명령 파싱
+    const { parseInteractiveCommand } = await import('./dsl/parser');
+    const parseResult = parseInteractiveCommand(text);
+
+    if (!parseResult.success) {
+      // 파싱 실패 - 에러 메시지 전송
+      logger.warn(`DSL parsing failed: ${parseResult.error?.message}`);
+      const { formatError, formatBold, formatDslGuide } = await import('./bot/formatters');
+
+      await say(
+        formatError(formatBold('DSL 파싱 실패')) + '\n\n' +
+        (parseResult.error?.message || '알 수 없는 오류') + '\n\n' +
+        formatDslGuide()
+      );
+      return;
+    }
+
+    // 작업 큐에 추가
+    const job = this.jobQueue.addJob(channelId, JobType.DSL_COMMAND, text);
+
+    await say(
+      `✅ **DSL 명령 추가됨**\n\n` +
+      `**작업 ID**: ${job.id}\n` +
+      `**명령**: ${text}\n` +
+      `**세그먼트**: ${parseResult.segments.length}개\n\n` +
+      '작업이 큐에 추가되었습니다. 곧 실행됩니다.'
+    );
+
+    // 오케스트레이터 시작 (백그라운드)
+    this.orchestrator.startJob(channelId, channelConfig).catch((error) => {
+      logger.error(`Failed to start DSL job ${job.id}: ${error}`);
+    });
+  }
+
+  /**
+   * 기본 입력 처리 (FR10: /ask 없이 자동 전송)
+   * Handle default input (FR10: Auto-send without /ask)
+   */
+  private async handleDefaultInput(
+    channelId: string,
+    channelConfig: ChannelConfig,
+    text: string,
+    say: any
+  ): Promise<void> {
+    const logger = getLogger();
+
+    // 프롬프트 길이 체크
+    if (text.length > 10000) {
+      await say(
+        `⚠️ **프롬프트가 너무 김**\n\n` +
+        `프롬프트 길이: ${text.length}자 (최대 10,000자)\n` +
+        '프롬프트를 짧게 줄이거나 스니펫으로 등록하세요.'
+      );
+      return;
+    }
+
+    // 작업 큐에 추가
+    const job = this.jobQueue.addJob(channelId, JobType.ASK_PROMPT, text);
+
+    await say(
+      `✅ **작업 추가됨**\n\n` +
+      `**작업 ID**: ${job.id}\n` +
+      `**프로젝트**: ${channelConfig.projectName}\n` +
+      `**프롬프트**: ${text.slice(0, 100)}${text.length > 100 ? '...' : ''}\n\n` +
+      '작업이 큐에 추가되었습니다. 곧 실행됩니다.'
+    );
+
+    // 오케스트레이터 시작 (백그라운드)
+    this.orchestrator.startJob(channelId, channelConfig).catch((error) => {
+      logger.error(`Failed to start job ${job.id}: ${error}`);
+    });
   }
 
   /**

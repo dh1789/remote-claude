@@ -47,6 +47,7 @@ export interface SnippetStore {
 export enum JobType {
   RUN_SNIPPET = 'run_snippet',
   ASK_PROMPT = 'ask_prompt',
+  DSL_COMMAND = 'dsl_command',
   CANCEL = 'cancel',
 }
 
