@@ -123,14 +123,14 @@ PRD: `0001-prd-interactive-dsl-mode.md` 기반
     - [x] 6.2.1 정상 경로: "ddd" → true
     - [x] 6.2.2 경계 조건: "npm" → false
     - [x] 6.2.3 예외 케이스: "ddx" → 혼합 감지 에러
-  - [ ] 6.3 `src/tmux/executor.ts`에 `sendArrowKey()` 테스트 추가
-    - [ ] 6.3.1 정상 경로: Down 키 성공적으로 전송
-    - [ ] 6.3.2 경계 조건: 4가지 방향 모두 테스트 (Right, Left, Up, Down)
-    - [ ] 6.3.3 예외 케이스: 잘못된 세션 이름 오류 처리
-  - [ ] 6.4 `src/dsl/executor.test.ts` 생성 및 `executeCommandSequence()` 테스트
-    - [ ] 6.4.1 정상 경로: [Down, Enter] 성공적으로 실행
-    - [ ] 6.4.2 경계 조건: 단일 키 명령
-    - [ ] 6.4.3 예외 케이스: 시퀀스 중간에 tmux 실패
+  - [x] 6.3 `src/tmux/__tests__/executor.test.ts`에 `sendArrowKey()` 테스트 추가
+    - [x] 6.3.1 정상 경로: Down 키 성공적으로 전송
+    - [x] 6.3.2 경계 조건: 4가지 방향 모두 테스트 (Right, Left, Up, Down)
+    - [x] 6.3.3 예외 케이스: 잘못된 세션 이름 오류 처리
+  - [x] 6.4 `src/tmux/__tests__/executor.test.ts`에 `executeCommandSequence()` 테스트
+    - [x] 6.4.1 정상 경로: [Down, Enter] 성공적으로 실행
+    - [x] 6.4.2 경계 조건: 단일 키 명령
+    - [x] 6.4.3 예외 케이스: 시퀀스 중간에 tmux 실패
   - [ ] 6.5 `src/handlers/mention-filter.test.ts` 생성 및 `filterSlackMentions()` 테스트
     - [ ] 6.5.1 정상 경로: "<@U12345> text" → "text", 멘션 1개 감지
     - [ ] 6.5.2 경계 조건: "<!channel> <!here> text" → "text", 멘션 2개 감지
