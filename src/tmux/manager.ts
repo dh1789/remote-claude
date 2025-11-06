@@ -283,7 +283,8 @@ export class TmuxManager {
   ): Promise<TmuxCommandResult> {
     const logger = getLogger();
     logger.info(`Sending prompt to Claude Code in session ${sessionName}`);
-    logger.debug(`Prompt: ${prompt.slice(0, 100)}...`);
+    logger.info(`Prompt length: ${prompt.length} characters`);
+    logger.debug(`Prompt (first 200 chars): ${prompt.slice(0, 200)}${prompt.length > 200 ? '...' : ''}`);
 
     // 1. 프롬프트 전송 (리터럴 모드)
     const sendResult = await this.sendKeys(sessionName, prompt, true);

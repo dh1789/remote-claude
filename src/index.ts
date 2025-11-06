@@ -406,15 +406,29 @@ class RemoteClaudeApp {
         : allPaths;
       validatePathConflicts(projectPath, otherPaths);
 
-      // 5. tmux 세션 이름 생성
-      const tmuxSession = `claude-${channelId}`;
+      // 5. tmux 세션 이름 생성 (프로젝트 이름 포함)
+      const tmuxSession = `claude-${projectName}-${channelId}`;
 
-      // 6. 채널 설정 저장
+      // 6. 기존 채널의 세션 정리 (세션 이름이 변경된 경우)
+      const { sessionExists, createSession, sendKeys, sendEnter, capturePane, clearHistory, killSession } = await import('./tmux/executor');
+
+      if (existingChannel && existingChannel.tmuxSession !== tmuxSession) {
+        // 기존 세션 이름과 다르면 기존 세션 종료
+        logger.info(`Session name changed from ${existingChannel.tmuxSession} to ${tmuxSession}`);
+        const oldSessionExists = await sessionExists(existingChannel.tmuxSession);
+
+        if (oldSessionExists) {
+          logger.info(`Killing old session: ${existingChannel.tmuxSession}`);
+          await killSession(existingChannel.tmuxSession);
+          logger.info(`Old session killed: ${existingChannel.tmuxSession}`);
+        }
+      }
+
+      // 7. 채널 설정 저장
       const absolutePath = toAbsolutePath(projectPath);
       this.configStore.setChannel(channelId, projectName, absolutePath, tmuxSession);
 
-      // 7. tmux 세션 생성 또는 확인 및 Claude Code 시작
-      const { sessionExists, createSession, sendKeys, sendEnter, capturePane, clearHistory } = await import('./tmux/executor');
+      // 8. tmux 세션 생성 또는 확인 및 Claude Code 시작
       const sessionExistsResult = await sessionExists(tmuxSession);
 
       let needsClaudeStart = false;
@@ -443,7 +457,7 @@ class RemoteClaudeApp {
         }
       }
 
-      // 8. Claude Code 시작 (필요한 경우)
+      // 9. Claude Code 시작 (필요한 경우)
       if (needsClaudeStart) {
         logger.info('Starting Claude Code...');
 
@@ -479,7 +493,7 @@ class RemoteClaudeApp {
         }
       }
 
-      // 9. 성공 메시지 반환
+      // 10. 성공 메시지 반환
       const isUpdate = existingChannel !== undefined;
       const action = isUpdate ? '업데이트' : '설정';
 

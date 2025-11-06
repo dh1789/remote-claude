@@ -13,7 +13,6 @@ import {
   formatInProgress,
   formatSuccess,
   formatError,
-  formatWarning,
   formatBold,
   formatCodeBlock,
   formatOutputSummary,
@@ -153,14 +152,22 @@ export class JobOrchestrator {
     job: Job,
     channelConfig: ChannelConfig
   ): Promise<void> {
+    const promptPreview = job.prompt.length > 200
+      ? job.prompt.slice(0, 200) + '...'
+      : job.prompt;
+
+    const lengthInfo = job.prompt.length > 200
+      ? `\n(전체 ${job.prompt.length}자 중 200자만 표시)`
+      : '';
+
     const message =
       formatInProgress(formatBold('작업 시작')) +
       '\n\n' +
       `${formatBold('작업 ID')}: ${job.id}\n` +
       `${formatBold('프로젝트')}: ${channelConfig.projectName}\n` +
       `${formatBold('타입')}: ${job.type}\n` +
-      `${formatBold('프롬프트')}:\n` +
-      formatCodeBlock(job.prompt.slice(0, 200) + (job.prompt.length > 200 ? '...' : ''));
+      `${formatBold('프롬프트')}${lengthInfo}:\n` +
+      formatCodeBlock(promptPreview);
 
     try {
       await this.slackApp.client.chat.postMessage({
@@ -181,8 +188,6 @@ export class JobOrchestrator {
     channelConfig: ChannelConfig,
     job: Job
   ): Promise<void> {
-    const logger = getLogger();
-
     try {
       // 출력 폴링 (최대 10분)
       const result = await this.tmuxManager.pollUntilStable(
@@ -195,60 +200,17 @@ export class JobOrchestrator {
         throw new Error('Output polling timed out');
       }
 
-      // 대화형 프롬프트 감지
-      const hasInteractivePrompt = await this.tmuxManager.detectInteractivePrompt(
-        channelConfig.tmuxSession
-      );
+      // 작업 완료
+      this.jobQueue.updateJobStatus(job.id, JobStatus.COMPLETED);
+      this.runningJobs.delete(channelId);
+      this.stateManager.clearSession(channelId);
 
-      if (hasInteractivePrompt) {
-        // 대화형 응답 대기 상태로 전환
-        this.stateManager.setWaitingForResponse(channelId, true, 30); // 30분 타임아웃
-        this.stateManager.setLastOutput(channelId, result.fullOutput);
+      await this.sendJobCompletionMessage(channelId, job, result);
 
-        await this.sendInteractivePromptMessage(channelId, result.summary);
-
-        // 작업은 계속 RUNNING 상태 유지
-        logger.info(`Job waiting for interactive response: ${job.id}`);
-      } else {
-        // 작업 완료
-        this.jobQueue.updateJobStatus(job.id, JobStatus.COMPLETED);
-        this.runningJobs.delete(channelId);
-        this.stateManager.clearSession(channelId);
-
-        await this.sendJobCompletionMessage(channelId, job, result);
-
-        // 다음 작업 실행
-        await this.startJob(channelId, channelConfig);
-      }
+      // 다음 작업 실행
+      await this.startJob(channelId, channelConfig);
     } catch (error) {
       throw error;
-    }
-  }
-
-  /**
-   * 대화형 프롬프트 메시지 전송
-   * Send interactive prompt message
-   */
-  private async sendInteractivePromptMessage(
-    channelId: string,
-    output: string
-  ): Promise<void> {
-    const message =
-      formatWarning(formatBold('대화형 응답 필요')) +
-      '\n\n' +
-      'Claude Code가 사용자 입력을 기다리고 있습니다.\n' +
-      '`y` 또는 `n` 으로 응답하세요.\n\n' +
-      formatBold('출력:') +
-      '\n' +
-      formatCodeBlock(output);
-
-    try {
-      await this.slackApp.client.chat.postMessage({
-        channel: channelId,
-        text: message,
-      });
-    } catch (error) {
-      getLogger().error(`Failed to send interactive prompt message: ${error}`);
     }
   }
 
@@ -669,25 +631,13 @@ export class JobOrchestrator {
       // Process output (last 30 lines only)
       const processedOutput = processCaptureResult(captureResult.output, 0, 30);
 
-      // 인터랙티브 프롬프트 감지
-      const interactiveInfo = detectAnyInteractivePrompt(processedOutput.fullOutput);
-
-      // 완료 메시지 전송 (항상)
+      // 완료 메시지 전송
       logger.info('DSL command completed successfully');
       await this.sendDslCompletionMessage(
         channelId,
         job,
         processedOutput.summary
       );
-
-      // 인터랙티브 프롬프트가 감지되면 추가 도움말 전송
-      if (interactiveInfo && interactiveInfo.detected) {
-        logger.info(`Interactive prompt detected after DSL execution: ${interactiveInfo.type}`);
-        await this.sendInteractivePromptMessage(
-          channelId,
-          processedOutput.summary
-        );
-      }
 
       // 작업 완료
       this.jobQueue.updateJobStatus(job.id, JobStatus.COMPLETED);
