@@ -80,28 +80,28 @@ PRD: `0002-prd-file-download.md`
   - [x] 3.10 에러 발생 시 로깅 및 사용자에게 일반 에러 메시지 전송
 
 - [ ] 4.0 유닛 테스트 구현
-  - [ ] 4.1 `src/utils/__tests__/file-security.test.ts` 생성 및 Jest 설정
-  - [ ] 4.2 테스트 픽스처 설정 (임시 테스트 디렉토리 및 파일 생성 헬퍼)
-  - [ ] 4.3 Happy Path 테스트 1: 유효한 상대 경로 입력 시 절대 경로 반환 검증
-  - [ ] 4.4 Happy Path 테스트 2: 중첩된 디렉토리 경로 처리
-  - [ ] 4.5 Happy Path 테스트 3: 프로젝트 루트의 파일 접근
-  - [ ] 4.6 Boundary Conditions 테스트 1: 빈 파일명 입력
-  - [ ] 4.7 Boundary Conditions 테스트 2: 정확히 10MB 크기의 파일
-  - [ ] 4.8 Boundary Conditions 테스트 3: 10MB + 1 byte 크기의 파일
-  - [ ] 4.9 Exception Cases 테스트 1: Path traversal 공격 시도 (`../../etc/passwd`)
-  - [ ] 4.10 Exception Cases 테스트 2: 민감한 파일 접근 시도 (`.env`, `*.key`, `credentials`)
-  - [ ] 4.11 Exception Cases 테스트 3: 존재하지 않는 파일
-  - [ ] 4.12 Exception Cases 테스트 4: 디렉토리 경로 입력
-  - [ ] 4.13 Side Effects 테스트: 함수 호출 후 파일 시스템 상태 변화 없음 확인
-  - [ ] 4.14 Side Effects 테스트: 전역 변수 변경 없음 확인
-  - [ ] 4.15 Side Effects 테스트: 여러 번 호출 시 동일 입력에 대해 동일 결과 반환 확인
+  - [x] 4.1 `src/utils/__tests__/file-security.test.ts` 생성 및 Jest 설정
+  - [x] 4.2 테스트 픽스처 설정 (임시 테스트 디렉토리 및 파일 생성 헬퍼)
+  - [x] 4.3 Happy Path 테스트 1: 유효한 상대 경로 입력 시 절대 경로 반환 검증
+  - [x] 4.4 Happy Path 테스트 2: 중첩된 디렉토리 경로 처리
+  - [x] 4.5 Happy Path 테스트 3: 프로젝트 루트의 파일 접근
+  - [x] 4.6 Boundary Conditions 테스트 1: 빈 파일명 입력
+  - [x] 4.7 Boundary Conditions 테스트 2: 정확히 10MB 크기의 파일
+  - [x] 4.8 Boundary Conditions 테스트 3: 10MB + 1 byte 크기의 파일
+  - [x] 4.9 Exception Cases 테스트 1: Path traversal 공격 시도 (`../../etc/passwd`)
+  - [x] 4.10 Exception Cases 테스트 2: 민감한 파일 접근 시도 (`.env`, `*.key`, `credentials`)
+  - [x] 4.11 Exception Cases 테스트 3: 존재하지 않는 파일
+  - [x] 4.12 Exception Cases 테스트 4: 디렉토리 경로 입력
+  - [x] 4.13 Side Effects 테스트: 함수 호출 후 파일 시스템 상태 변화 없음 확인
+  - [x] 4.14 Side Effects 테스트: 전역 변수 변경 없음 확인
+  - [x] 4.15 Side Effects 테스트: 여러 번 호출 시 동일 입력에 대해 동일 결과 반환 확인
   - [ ] 4.16 `src/handlers/__tests__/file-download.test.ts` 생성 및 Jest 설정
   - [ ] 4.17 Slack API Mock 설정 (`app.client.files.uploadV2`, `app.client.chat.postMessage`)
   - [ ] 4.18 Happy Path 테스트: 정상 파일 다운로드 플로우 검증 (Mock 응답 설정, API 호출 검증)
   - [ ] 4.19 Exception Cases 테스트 1: 채널 설정 없음 시 에러 처리
   - [ ] 4.20 Exception Cases 테스트 2: Slack API 업로드 실패 시 에러 메시지 전송
   - [ ] 4.21 Exception Cases 테스트 3: 파일 읽기 권한 오류 처리
-  - [ ] 4.22 모든 유닛 테스트 실행 및 통과 확인 (`npx jest src/utils/__tests__/file-security.test.ts`)
+  - [x] 4.22 모든 유닛 테스트 실행 및 통과 확인 (`npx jest src/utils/__tests__/file-security.test.ts`)
   - [ ] 4.23 모든 유닛 테스트 실행 및 통과 확인 (`npx jest src/handlers/__tests__/file-download.test.ts`)
 
 - [ ] 5.0 시스템 테스트 구현
