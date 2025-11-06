@@ -21,6 +21,7 @@ import { JobType, ChannelConfig } from './types';
 import { helpHandler } from './bot/commands/help';
 import { unsetupHandler } from './bot/commands/unsetup';
 import { snippetHandler } from './bot/commands/snippet';
+import { handleFileDownload } from './handlers/file-download';
 
 /**
  * 메인 애플리케이션 클래스
@@ -128,6 +129,48 @@ class RemoteClaudeApp {
         args,
       });
       await say(response);
+    });
+
+    // /download 명령어 - 파일 다운로드
+    this.app.command('/download', async ({ command, ack }) => {
+      // 1. 즉시 응답 (타임아웃 방지)
+      await ack();
+
+      const logger = getLogger();
+      const channelId = command.channel_id;
+      const filePath = command.text.trim();
+
+      try {
+        // 2. 빈 경로 입력 확인
+        if (!filePath) {
+          await this.app.client.chat.postMessage({
+            channel: channelId,
+            text: '⚠️ 사용법: `/download <filepath>`\n\n예시:\n• `/download logs/app.log`\n• `/download src/index.ts`\n• `/download README.md`',
+          });
+          return;
+        }
+
+        // 3. 채널 설정 확인
+        const channelConfig = this.configStore.getChannel(channelId);
+        if (!channelConfig) {
+          logger.warn(`/download called in unconfigured channel: ${channelId}`);
+          await this.app.client.chat.postMessage({
+            channel: channelId,
+            text: '⚠️ 먼저 `/setup` 명령으로 프로젝트를 설정해주세요.',
+          });
+          return;
+        }
+
+        // 4. handleFileDownload() 함수 호출
+        logger.info(`/download command: ${filePath} (channel: ${channelId})`);
+        await handleFileDownload(this.app, channelId, channelConfig, filePath);
+      } catch (error) {
+        logger.error(`/download command error: ${error}`);
+        await this.app.client.chat.postMessage({
+          channel: channelId,
+          text: `❌ 명령 처리 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      }
     });
 
     // /run 명령어 - 오케스트레이터 통합

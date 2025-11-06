@@ -67,17 +67,17 @@ PRD: `0002-prd-file-download.md`
   - [x] 2.14 try-catch 블록으로 전체 에러 핸들링 구현
   - [x] 2.15 TypeScript 타입 정의 및 JSDoc 주석 추가
 
-- [ ] 3.0 슬래시 커맨드 통합
-  - [ ] 3.1 `src/index.ts` 파일에서 `/download` 커맨드 핸들러 영역 추가
-  - [ ] 3.2 `handleFileDownload` import 추가
-  - [ ] 3.3 `/download` 슬래시 커맨드 리스너 등록 (`app.command('/download')`)
-  - [ ] 3.4 커맨드 인자에서 파일 경로 추출 (`command.text`)
-  - [ ] 3.5 빈 경로 입력 시 사용법 안내 메시지 전송 (`사용법: /download <filepath>`)
-  - [ ] 3.6 StateManager에서 ChannelConfig 가져오기
-  - [ ] 3.7 채널 미설정 시 에러 메시지 전송 (`⚠️ 먼저 /setup 명령으로 프로젝트를 설정해주세요.`)
-  - [ ] 3.8 `handleFileDownload()` 함수 호출 (app, channelId, channelConfig, filePath 전달)
-  - [ ] 3.9 Slack `ack()` 응답 처리 (즉시 응답으로 타임아웃 방지)
-  - [ ] 3.10 에러 발생 시 로깅 및 사용자에게 일반 에러 메시지 전송
+- [x] 3.0 슬래시 커맨드 통합
+  - [x] 3.1 `src/index.ts` 파일에서 `/download` 커맨드 핸들러 영역 추가
+  - [x] 3.2 `handleFileDownload` import 추가
+  - [x] 3.3 `/download` 슬래시 커맨드 리스너 등록 (`app.command('/download')`)
+  - [x] 3.4 커맨드 인자에서 파일 경로 추출 (`command.text`)
+  - [x] 3.5 빈 경로 입력 시 사용법 안내 메시지 전송 (`사용법: /download <filepath>`)
+  - [x] 3.6 StateManager에서 ChannelConfig 가져오기
+  - [x] 3.7 채널 미설정 시 에러 메시지 전송 (`⚠️ 먼저 /setup 명령으로 프로젝트를 설정해주세요.`)
+  - [x] 3.8 `handleFileDownload()` 함수 호출 (app, channelId, channelConfig, filePath 전달)
+  - [x] 3.9 Slack `ack()` 응답 처리 (즉시 응답으로 타임아웃 방지)
+  - [x] 3.10 에러 발생 시 로깅 및 사용자에게 일반 에러 메시지 전송
 
 - [ ] 4.0 유닛 테스트 구현
   - [ ] 4.1 `src/utils/__tests__/file-security.test.ts` 생성 및 Jest 설정
