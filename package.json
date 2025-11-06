@@ -9,6 +9,7 @@
     "dev": "ts-node src/index.ts",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:system:setup": "node tests/system/setup-test-environment.js",
     "lint": "tsc --noEmit"
   },
   "repository": {

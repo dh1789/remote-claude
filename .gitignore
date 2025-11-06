@@ -30,6 +30,9 @@ Thumbs.db
 coverage/
 .nyc_output/
 
+# System test files
+tests/system/test-project/
+
 # Temporary files
 *.tmp
 tmp/
