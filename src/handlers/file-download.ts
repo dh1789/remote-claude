@@ -95,7 +95,7 @@ export async function handleFileDownload(
       initial_comment: `📎 요청하신 파일입니다: \`${filePath}\``,
     });
 
-    logger.info(`File uploaded successfully: ${fileName} (upload_id: ${uploadResult.file?.id || 'unknown'})`);
+    logger.info(`File uploaded successfully: ${fileName} (upload_id: ${(uploadResult as any).file?.id || 'unknown'})`);
 
     // 7. 업로드 성공 메시지 전송
     await app.client.chat.postMessage({
