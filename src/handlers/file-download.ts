@@ -55,6 +55,19 @@ export async function handleFileDownload(
       return;
     }
 
+    // 1.5. Bot이 채널에 참여했는지 확인하고, 없으면 자동 참여
+    try {
+      await app.client.conversations.join({
+        channel: channelId,
+      });
+      logger.debug(`Bot joined channel: ${channelId}`);
+    } catch (joinError: any) {
+      // already_in_channel 에러는 무시 (이미 참여 중)
+      if (joinError.data?.error !== 'already_in_channel') {
+        logger.warn(`Failed to join channel ${channelId}: ${joinError.data?.error || joinError.message}`);
+      }
+    }
+
     logger.info(`File download requested: ${filePath} (Project: ${channelConfig.projectName})`);
 
     // 2. 파일 경로 보안 검증
