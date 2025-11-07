@@ -22,6 +22,7 @@ import { helpHandler } from './bot/commands/help';
 import { unsetupHandler } from './bot/commands/unsetup';
 import { snippetHandler } from './bot/commands/snippet';
 import { handleFileDownload } from './handlers/file-download';
+import { mapKoreanCommand } from './utils/korean-mapper';
 
 /**
  * 메인 애플리케이션 클래스
@@ -191,6 +192,94 @@ class RemoteClaudeApp {
     this.app.command('/cancel', async ({ command, ack, say }) => {
       await ack();
       await this.handleCancelCommand(command.channel_id, command.user_id, say);
+    });
+
+    // 한글 명령어 지원
+    // Korean command support
+
+    // /ㄴㅅㅁ션 명령어 → /state
+    this.app.command('/ㄴㅅㅁ션', async ({ command, ack, say }) => {
+      await ack();
+      const logger = getLogger();
+
+      // 한글 명령어 → 영어 명령어 매핑
+      const mappingResult = mapKoreanCommand('/ㄴㅅㅁ션');
+
+      if (!mappingResult.success) {
+        logger.warn(`Korean command mapping failed: ${mappingResult.error}`);
+        await say(
+          `⚠️ **한글 명령어 매핑 실패**\n\n` +
+          `${mappingResult.error}\n\n` +
+          `**사용 가능한 한글 명령어:**\n` +
+          `• \`/ㄴㅅㅁ션\` → \`/state\` (상태 확인)\n` +
+          `• \`/애쥐ㅐㅁㅇ\` → \`/download\` (파일 다운로드)`
+        );
+        return;
+      }
+
+      logger.info(`Korean command mapped: /ㄴㅅㅁ션 → ${mappingResult.mappedCommand}`);
+
+      // /state 핸들러 호출
+      await this.handleStateCommand(command.channel_id, command.user_id, command.text, say);
+    });
+
+    // /애쥐ㅐㅁㅇ 명령어 → /download
+    this.app.command('/애쥐ㅐㅁㅇ', async ({ command, ack, say }) => {
+      await ack();
+      const logger = getLogger();
+
+      // 한글 명령어 → 영어 명령어 매핑
+      const mappingResult = mapKoreanCommand('/애쥐ㅐㅁㅇ');
+
+      if (!mappingResult.success) {
+        logger.warn(`Korean command mapping failed: ${mappingResult.error}`);
+        await say(
+          `⚠️ **한글 명령어 매핑 실패**\n\n` +
+          `${mappingResult.error}\n\n` +
+          `**사용 가능한 한글 명령어:**\n` +
+          `• \`/ㄴㅅㅁ션\` → \`/state\` (상태 확인)\n` +
+          `• \`/애쥐ㅐㅁㅇ\` → \`/download\` (파일 다운로드)`
+        );
+        return;
+      }
+
+      logger.info(`Korean command mapped: /애쥐ㅐㅁㅇ → ${mappingResult.mappedCommand}`);
+
+      // /download 핸들러와 동일한 로직
+      const channelId = command.channel_id;
+      const filePath = command.text.trim();
+
+      try {
+        // 빈 경로 입력 확인
+        if (!filePath) {
+          await this.app.client.chat.postMessage({
+            channel: channelId,
+            text: '⚠️ 사용법: `/애쥐ㅐㅁㅇ <filepath>` 또는 `/download <filepath>`\n\n예시:\n• `/애쥐ㅐㅁㅇ logs/app.log`\n• `/download src/index.ts`\n• `/download README.md`',
+          });
+          return;
+        }
+
+        // 채널 설정 확인
+        const channelConfig = this.configStore.getChannel(channelId);
+        if (!channelConfig) {
+          logger.warn(`/애쥐ㅐㅁㅇ called in unconfigured channel: ${channelId}`);
+          await this.app.client.chat.postMessage({
+            channel: channelId,
+            text: '⚠️ 먼저 `/setup` 명령으로 프로젝트를 설정해주세요.',
+          });
+          return;
+        }
+
+        // handleFileDownload() 함수 호출
+        logger.info(`/애쥐ㅐㅁㅇ command: ${filePath} (channel: ${channelId})`);
+        await handleFileDownload(this.app, channelId, channelConfig, filePath);
+      } catch (error) {
+        logger.error(`/애쥐ㅐㅁㅇ command error: ${error}`);
+        await this.app.client.chat.postMessage({
+          channel: channelId,
+          text: `❌ 명령 처리 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      }
     });
 
     logger.info('All slash commands registered');
