@@ -41,26 +41,45 @@ function createLogFile() {
 
   const logFilePath = path.join(logDir, 'test-app.log');
 
-  // 5MB 로그 파일 생성 (반복적인 로그 패턴)
-  const logEntry = '[2025-01-06 10:00:00] INFO: Test application started\n';
+  // 기존 파일 삭제 (여러 번 실행해도 항상 5MB 파일 생성)
+  if (fs.existsSync(logFilePath)) {
+    fs.unlinkSync(logFilePath);
+  }
+
+  // 5MB 로그 파일 생성 (정확한 크기 제어)
   const targetSize = 5 * 1024 * 1024; // 5MB
-  const entriesNeeded = Math.ceil(targetSize / logEntry.length);
+  let totalWritten = 0;
+
+  // 샘플 로그 엔트리
+  const sampleEntry = '[2025-01-06T10:00:00.000Z] INFO: Request #1 processed successfully\n';
+  const entryLength = sampleEntry.length;
 
   let logContent = '';
-  for (let i = 0; i < entriesNeeded; i++) {
-    const timestamp = new Date(Date.now() + i * 1000).toISOString();
-    logContent += `[${timestamp}] INFO: Request #${i + 1} processed successfully\n`;
+  let entryCount = 0;
+
+  while (totalWritten < targetSize) {
+    const timestamp = new Date(Date.now() + entryCount * 1000).toISOString();
+    const logEntry = `[${timestamp}] INFO: Request #${entryCount + 1} processed successfully\n`;
+
+    // 목표 크기를 초과하지 않도록 체크
+    if (totalWritten + logEntry.length > targetSize) {
+      break;
+    }
+
+    logContent += logEntry;
+    totalWritten += logEntry.length;
+    entryCount++;
 
     // 메모리 효율을 위해 1MB씩 청크로 작성
     if (logContent.length >= 1024 * 1024) {
-      fs.appendFileSync(logFilePath, logContent);
+      fs.writeFileSync(logFilePath, logContent, { flag: 'a' });
       logContent = '';
     }
   }
 
   // 남은 내용 작성
   if (logContent.length > 0) {
-    fs.appendFileSync(logFilePath, logContent);
+    fs.writeFileSync(logFilePath, logContent, { flag: 'a' });
   }
 
   const stats = fs.statSync(logFilePath);
