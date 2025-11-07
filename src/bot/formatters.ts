@@ -3,6 +3,16 @@
  * Slack message formatting utilities
  */
 
+import {
+  convertBackticks,
+  splitMessage,
+  addSplitIndicators,
+  wrapInCodeBlocks,
+  sendSplitMessages,
+  type SplitMessageResult,
+} from '../utils/message-splitter';
+import type { App } from '@slack/bolt';
+
 /**
  * 코드 블록 포맷팅
  * Format text as code block
@@ -412,3 +422,68 @@ export function formatDslExecutionError(error: string, failedCommand?: string): 
 
   return errorMsg.join('\n');
 }
+
+// ============================================================================
+// 대용량 메시지 분할 및 전송 (message-splitter 통합)
+// Large message splitting and sending (message-splitter integration)
+// ============================================================================
+
+/**
+ * 메시지 분할 및 전송 파이프라인
+ * Message splitting and sending pipeline
+ *
+ * @param app - Slack Bolt App 인스턴스
+ * @param channelId - Slack 채널 ID
+ * @param content - 전송할 메시지 내용
+ * @param options - 옵션 (maxLength, wrapCodeBlock, addIndicators)
+ * @returns Promise<void>
+ * @description 대용량 메시지를 처리하는 전체 파이프라인 (백틱 변환 → 분할 → 표시 추가 → 코드 블록 → 전송)
+ */
+export async function formatAndSendLargeMessage(
+  app: App,
+  channelId: string,
+  content: string,
+  options: {
+    maxLength?: number;
+    wrapCodeBlock?: boolean;
+    addIndicators?: boolean;
+    delayMs?: number;
+  } = {}
+): Promise<void> {
+  const {
+    maxLength = 3500,
+    wrapCodeBlock = true,
+    addIndicators = true,
+    delayMs = 500,
+  } = options;
+
+  // 1. 백틱 충돌 방지 변환
+  let processedContent = convertBackticks(content);
+
+  // 2. 메시지 분할
+  const splitResult = splitMessage(processedContent, maxLength);
+  let messages = splitResult.messages;
+
+  // 3. 분할 표시 추가 (옵션)
+  if (addIndicators && messages.length > 1) {
+    messages = addSplitIndicators(messages);
+  }
+
+  // 4. 코드 블록으로 감싸기 (옵션)
+  if (wrapCodeBlock) {
+    messages = wrapInCodeBlocks(messages);
+  }
+
+  // 5. 메시지 전송
+  await sendSplitMessages(app, channelId, messages, delayMs);
+}
+
+// Re-export message-splitter functions for convenience
+export {
+  convertBackticks,
+  splitMessage,
+  addSplitIndicators,
+  wrapInCodeBlocks,
+  sendSplitMessages,
+  type SplitMessageResult,
+};
