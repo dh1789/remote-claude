@@ -396,6 +396,92 @@ class RemoteClaudeApp {
   }
 
   /**
+   * 버튼 액션 리스너 등록
+   * Register button action listeners
+   */
+  private registerButtonActions(): void {
+    const logger = getLogger();
+
+    logger.info('Registering button action listeners...');
+
+    // Import button handlers
+    const {
+      handleQuickState,
+      handleQuickDownload,
+      handleDownloadFileModalSubmit,
+      handleQuickCancel,
+      handleSendEnter,
+      handleSendEnterTwice,
+      handleSendUp,
+      handleSendDown,
+      handleSendLeft,
+      handleSendRight,
+    } = require('./bot/interactive-buttons');
+
+    // "📊 상태 확인" 버튼
+    this.app.action('quick_state', async ({ body, ack }) => {
+      await ack();
+      await handleQuickState(this.app, body, this.configStore, this.stateManager, this.jobQueue);
+    });
+
+    // "📥 파일 다운로드" 버튼
+    this.app.action('quick_download', async ({ body, ack }) => {
+      await ack();
+      await handleQuickDownload(this.app, body, this.configStore);
+    });
+
+    // "🚫 작업 취소" 버튼
+    this.app.action('cancel_job', async ({ body, ack }) => {
+      await ack();
+      await handleQuickCancel(this.app, body, this.configStore, this.orchestrator);
+    });
+
+    // "⏎ 엔터" 버튼
+    this.app.action('send_enter', async ({ body, ack }) => {
+      await ack();
+      await handleSendEnter(this.app, body, this.configStore);
+    });
+
+    // "⏎⏎ 엔터*2" 버튼
+    this.app.action('send_enter_twice', async ({ body, ack }) => {
+      await ack();
+      await handleSendEnterTwice(this.app, body, this.configStore);
+    });
+
+    // "↑" 버튼
+    this.app.action('send_up', async ({ body, ack }) => {
+      await ack();
+      await handleSendUp(this.app, body, this.configStore);
+    });
+
+    // "↓" 버튼
+    this.app.action('send_down', async ({ body, ack }) => {
+      await ack();
+      await handleSendDown(this.app, body, this.configStore);
+    });
+
+    // "←" 버튼
+    this.app.action('send_left', async ({ body, ack }) => {
+      await ack();
+      await handleSendLeft(this.app, body, this.configStore);
+    });
+
+    // "→" 버튼
+    this.app.action('send_right', async ({ body, ack }) => {
+      await ack();
+      await handleSendRight(this.app, body, this.configStore);
+    });
+
+    // 파일 다운로드 모달 제출 처리
+    this.app.view('download_file_modal', async ({ ack, body, view }) => {
+      await ack();
+      await handleDownloadFileModalSubmit(this.app, body, this.configStore);
+    });
+
+    logger.info('Button action listeners registered');
+  }
+
+  /**
    * DSL 입력 처리
    * Handle DSL input
    */
@@ -1040,6 +1126,9 @@ class RemoteClaudeApp {
 
       // 메시지 리스너 등록
       this.registerMessageListeners();
+
+      // 버튼 액션 리스너 등록
+      this.registerButtonActions();
 
       // 상태 복구 실행
       await this.executeStateRecovery();

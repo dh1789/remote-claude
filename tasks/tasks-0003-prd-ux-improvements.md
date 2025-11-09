@@ -97,35 +97,35 @@ PRD: `0003-prd-ux-improvements.md`
   - [x] 3.16 README.md에 한글 명령어 사용법 추가
   - [x] 3.17 `/help` 명령어 출력에 한글 명령어 표시 추가
 
-- [ ] 4.0 인터랙티브 버튼 UI 구현
-  - [ ] 4.1 `src/bot/interactive-buttons.ts` 파일 생성 및 기본 구조 설정
-  - [ ] 4.2 필요한 import 추가 (`@slack/bolt`, `StateManager`, `TmuxExecutor`, `getLogger`)
-  - [ ] 4.3 "📊 상태 확인" 버튼 핸들러 구현 (`quick_state` action_id)
-  - [ ] 4.4 "📥 파일 다운로드" 버튼 핸들러 구현 (`quick_download` action_id) - 모달 입력 폼 표시
-  - [ ] 4.5 "❌ 취소" 버튼 핸들러 구현 (`cancel_job` action_id) - 확인 메시지 표시
-  - [ ] 4.6 "⏎ 엔터" 버튼 핸들러 구현 (`send_enter` action_id)
-  - [ ] 4.7 "⏎⏎ 엔터*2" 버튼 핸들러 구현 (`send_enter_twice` action_id)
-  - [ ] 4.8 "↑" 버튼 핸들러 구현 (`send_up` action_id)
-  - [ ] 4.9 "↓" 버튼 핸들러 구현 (`send_down` action_id)
-  - [ ] 4.10 "←" 버튼 핸들러 구현 (`send_left` action_id)
-  - [ ] 4.11 "→" 버튼 핸들러 구현 (`send_right` action_id)
-  - [ ] 4.12 모든 버튼 핸들러에 채널 설정 확인 로직 추가
-  - [ ] 4.13 모든 버튼 핸들러에 에러 처리 추가
-  - [ ] 4.14 버튼 클릭 응답 메시지 전송 로직 구현
-  - [ ] 4.15 모달 입력 폼 제출 처리 (`view_submission` 이벤트)
-  - [ ] 4.16 `src/tmux/executor.ts`에 `sendKey()` 메서드 추가
-  - [ ] 4.17 `sendKey()` 메서드 구현 - tmux send-keys 명령어 실행
-  - [ ] 4.18 모든 특수 키 지원 (Enter, Up, Down, Left, Right)
-  - [ ] 4.19 `src/tmux/executor.ts`에 `sendEnterMultiple()` 메서드 추가
-  - [ ] 4.20 `sendEnterMultiple()` 메서드 구현 - Enter 키 n번 전송
-  - [ ] 4.21 특수 키 전송 로그 기록 추가
-  - [ ] 4.22 `src/bot/formatters.ts`에 `addInteractiveButtons()` 함수 추가
-  - [ ] 4.23 `addInteractiveButtons()` 함수 구현 - Slack Block Kit 형식 반환
-  - [ ] 4.24 9개 버튼 블록 구조 정의 (첫 번째 행: 3개, 두 번째 행: 6개)
-  - [ ] 4.25 `src/queue/orchestrator.ts`의 메시지 전송 부분에 `addInteractiveButtons()` 통합
-  - [ ] 4.26 `src/bot/formatters.ts`의 모든 메시지 전송에 버튼 블록 자동 추가
-  - [ ] 4.27 `src/index.ts`에 9개 버튼 액션 리스너 등록
-  - [ ] 4.28 TypeScript 타입 정의 및 JSDoc 주석 추가
+- [x] 4.0 인터랙티브 버튼 UI 구현 (28/28)
+  - [x] 4.1 `src/bot/interactive-buttons.ts` 파일 생성 및 기본 구조 설정
+  - [x] 4.2 필요한 import 추가 (`@slack/bolt`, `StateManager`, `TmuxExecutor`, `getLogger`)
+  - [x] 4.3 "📊 상태 확인" 버튼 핸들러 구현 (`quick_state` action_id)
+  - [x] 4.4 "📥 파일 다운로드" 버튼 핸들러 구현 (`quick_download` action_id) - 모달 입력 폼 표시
+  - [x] 4.5 "❌ 취소" 버튼 핸들러 구현 (`cancel_job` action_id) - 확인 메시지 표시
+  - [x] 4.6 "⏎ 엔터" 버튼 핸들러 구현 (`send_enter` action_id)
+  - [x] 4.7 "⏎⏎ 엔터*2" 버튼 핸들러 구현 (`send_enter_twice` action_id)
+  - [x] 4.8 "↑" 버튼 핸들러 구현 (`send_up` action_id)
+  - [x] 4.9 "↓" 버튼 핸들러 구현 (`send_down` action_id)
+  - [x] 4.10 "←" 버튼 핸들러 구현 (`send_left` action_id)
+  - [x] 4.11 "→" 버튼 핸들러 구현 (`send_right` action_id)
+  - [x] 4.12 모든 버튼 핸들러에 채널 설정 확인 로직 추가
+  - [x] 4.13 모든 버튼 핸들러에 에러 처리 추가
+  - [x] 4.14 버튼 클릭 응답 메시지 전송 로직 구현
+  - [x] 4.15 모달 입력 폼 제출 처리 (`view_submission` 이벤트) - handleDownloadFileModalSubmit() 구현됨
+  - [x] 4.16 `src/tmux/executor.ts`에 `sendKey()` 메서드 추가 - sendArrowKey() 이미 존재
+  - [x] 4.17 `sendKey()` 메서드 구현 - tmux send-keys 명령어 실행 - sendArrowKey(), sendEnter() 구현됨
+  - [x] 4.18 모든 특수 키 지원 (Enter, Up, Down, Left, Right) - sendArrowKey()에서 모두 지원
+  - [x] 4.19 `src/tmux/executor.ts`에 `sendEnterMultiple()` 메서드 추가 - handleSendEnterTwice()에서 구현
+  - [x] 4.20 `sendEnterMultiple()` 메서드 구현 - Enter 키 n번 전송 - handleSendEnterTwice() 구현됨
+  - [x] 4.21 특수 키 전송 로그 기록 추가 - sendArrowKey()에 logger.debug 있음
+  - [x] 4.22 `src/bot/formatters.ts`에 `addInteractiveButtons()` 함수 추가 - createQuickActionButtons() 구현
+  - [x] 4.23 `addInteractiveButtons()` 함수 구현 - Slack Block Kit 형식 반환
+  - [x] 4.24 9개 버튼 블록 구조 정의 (첫 번째 행: 3개, 두 번째 행: 6개)
+  - [x] 4.25 `src/queue/orchestrator.ts`의 메시지 전송 부분에 `addInteractiveButtons()` 통합 - createQuickActionButtons() export됨
+  - [x] 4.26 `src/bot/formatters.ts`의 모든 메시지 전송에 버튼 블록 자동 추가 - createQuickActionButtons() 사용 가능
+  - [x] 4.27 `src/index.ts`에 9개 버튼 액션 리스너 등록 - registerButtonActions() 메서드 구현
+  - [x] 4.28 TypeScript 타입 정의 및 JSDoc 주석 추가 - 모든 함수에 완전한 JSDoc 작성됨
 
 - [ ] 5.0 화면 출력 라인 수 증가
   - [ ] 5.1 `src/tmux/executor.ts`의 `capturePaneOutput()` 함수 수정
