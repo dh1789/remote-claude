@@ -236,18 +236,24 @@ export async function handleQuickState(
       statusMessage += `⚠️ 화면 캡처 실패: ${captureError instanceof Error ? captureError.message : '알 수 없는 오류'}`;
     }
 
-    // 메시지 전송
-    await app.client.chat.postMessage({
-      channel: channelId,
-      text: statusMessage,
+    // 메시지 전송 (대용량 메시지 처리 + 버튼 추가)
+    const { formatAndSendLargeMessage } = await import('../bot/formatters');
+    await formatAndSendLargeMessage(app, channelId, statusMessage, {
+      maxLength: 2500,
+      wrapCodeBlock: true,
+      addIndicators: true,
+      delayMs: 500,
     });
   } catch (error) {
     logger.error(`Quick state button handler error: ${error}`);
     if (channelId) {
       try {
+        const { addInteractiveButtons } = await import('../bot/formatters');
+        const errorMessage = `❌ **상태 조회 실패**\n\n${error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'}`;
         await app.client.chat.postMessage({
           channel: channelId,
-          text: `❌ **상태 조회 실패**\n\n${error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'}`,
+          text: errorMessage,
+          blocks: addInteractiveButtons(errorMessage),
         });
       } catch (slackError) {
         logger.error(`Failed to send error message to Slack: ${slackError}`);
