@@ -290,7 +290,35 @@ export async function handleQuickDownload(
       return;
     }
 
-    // 모달 열기 - 파일 경로 입력
+    const channelConfig = configStore.getChannel(channelId);
+    if (!channelConfig) {
+      await app.client.chat.postMessage({
+        channel: channelId,
+        text: '❌ 채널 정보를 가져올 수 없습니다.',
+      });
+      return;
+    }
+
+    // 프로젝트 내 파일 검색 (*.md, *.json, *.txt 등)
+    const { findFiles, filesToSlackOptions } = await import('../utils/file-finder');
+    const files = await findFiles(channelConfig.projectPath, {
+      extensions: ['.md', '.json', '.txt', '.log', '.yaml', '.yml', '.toml', '.ini', '.env', '.csv'],
+      maxFiles: 300,
+    });
+
+    if (files.length === 0) {
+      await app.client.chat.postMessage({
+        channel: channelId,
+        text: '⚠️ **파일을 찾을 수 없습니다.**\n\n' +
+          '프로젝트에서 `.md`, `.json`, `.txt` 등의 파일을 찾을 수 없습니다.',
+      });
+      return;
+    }
+
+    // Slack 옵션 형식으로 변환
+    const options = filesToSlackOptions(files);
+
+    // 모달 열기 - 파일 목록 선택
     await app.client.views.open({
       trigger_id: triggerId,
       view: {
@@ -310,19 +338,27 @@ export async function handleQuickDownload(
         },
         blocks: [
           {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `*${channelConfig.projectName}* 프로젝트\n총 ${files.length}개 파일 (최근 순)`,
+            },
+          },
+          {
             type: 'input',
             block_id: 'file_path_block',
             element: {
-              type: 'plain_text_input',
-              action_id: 'file_path_input',
+              type: 'static_select',
+              action_id: 'file_path_select',
               placeholder: {
                 type: 'plain_text',
-                text: '예: logs/app.log, src/index.ts',
+                text: '파일을 선택하세요',
               },
+              options: options.slice(0, 100), // Slack 제한: 최대 100개 옵션
             },
             label: {
               type: 'plain_text',
-              text: '파일 경로',
+              text: '파일 선택',
             },
           },
           {
@@ -330,7 +366,7 @@ export async function handleQuickDownload(
             elements: [
               {
                 type: 'mrkdwn',
-                text: '💡 프로젝트 디렉토리 내의 파일 경로를 입력하세요.',
+                text: '💡 가장 최근에 수정된 파일이 먼저 표시됩니다.',
               },
             ],
           },
@@ -338,6 +374,8 @@ export async function handleQuickDownload(
         private_metadata: channelId,
       },
     });
+
+    logger.info(`File download modal opened with ${files.length} files`);
   } catch (error) {
     logger.error(`Quick download button handler error: ${error}`);
     if (channelId) {
@@ -368,7 +406,11 @@ export async function handleDownloadFileModalSubmit(
 ): Promise<void> {
   const logger = getLogger();
   const channelId = body.view.private_metadata;
-  const filePath = body.view.state.values.file_path_block.file_path_input.value;
+
+  // file_path_select (static_select) 또는 file_path_input (plain_text_input) 확인
+  const filePathBlock = body.view.state.values.file_path_block;
+  const filePath = filePathBlock.file_path_select?.selected_option?.value ||
+                   filePathBlock.file_path_input?.value;
 
   if (!channelId || !filePath) {
     logger.error('Channel ID or file path not found in modal submission');
