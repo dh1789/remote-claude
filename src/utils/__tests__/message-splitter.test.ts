@@ -23,10 +23,10 @@ afterAll(() => {
 describe('splitMessage()', () => {
   describe('정상 경로 (Happy Path)', () => {
     /**
-     * Task 6.12: 3500자 이하 메시지 분할 안 함
+     * Task 6.12: 2500자 이하 메시지 분할 안 함
      */
-    test('should not split message under 3500 characters', () => {
-      const shortMessage = 'a'.repeat(3000);
+    test('should not split message under 2500 characters', () => {
+      const shortMessage = 'a'.repeat(2000);
 
       const result = splitMessage(shortMessage);
 
@@ -36,11 +36,11 @@ describe('splitMessage()', () => {
     });
 
     /**
-     * Task 6.13: 3500자 초과 메시지 정확히 분할
+     * Task 6.13: 2500자 초과 메시지 정확히 분할
      */
-    test('should split message over 3500 characters', () => {
-      // 7500자 메시지 (줄바꿈 포함)
-      const longMessage = 'a'.repeat(3000) + '\n' + 'b'.repeat(3000) + '\n' + 'c'.repeat(1000);
+    test('should split message over 2500 characters', () => {
+      // 6500자 메시지 (줄바꿈 포함)
+      const longMessage = 'a'.repeat(2000) + '\n' + 'b'.repeat(2000) + '\n' + 'c'.repeat(2000) + '\n' + 'd'.repeat(500);
 
       const result = splitMessage(longMessage);
 
@@ -69,10 +69,10 @@ describe('splitMessage()', () => {
 
   describe('경계 조건 (Boundary Conditions)', () => {
     /**
-     * Task 6.15: 정확히 3500자 메시지 처리
+     * Task 6.15: 정확히 2500자 메시지 처리
      */
-    test('should handle exactly 3500 characters', () => {
-      const exactMessage = 'a'.repeat(3500);
+    test('should handle exactly 2500 characters', () => {
+      const exactMessage = 'a'.repeat(2500);
 
       const result = splitMessage(exactMessage);
 
@@ -82,19 +82,19 @@ describe('splitMessage()', () => {
     });
 
     /**
-     * Task 6.16: 3501자 메시지 (2개로 분할)
+     * Task 6.16: 2501자 메시지 (2개로 분할)
      */
-    test('should split 3501 characters into 2 parts', () => {
-      const message3501 = 'a'.repeat(3501);
+    test('should split 2501 characters into 2 parts', () => {
+      const message2501 = 'a'.repeat(2501);
 
-      const result = splitMessage(message3501);
+      const result = splitMessage(message2501);
 
       expect(result.totalParts).toBe(2);
       expect(result.messages).toHaveLength(2);
 
       // 분할된 메시지들을 합치면 원본과 동일
       const combined = result.messages.join('');
-      expect(combined).toBe(message3501);
+      expect(combined).toBe(message2501);
     });
 
     /**
@@ -161,7 +161,7 @@ describe('splitMessage()', () => {
 
       // 각 메시지가 최대 길이 이하인지 확인
       result.messages.forEach((message) => {
-        expect(message.length).toBeLessThanOrEqual(3500);
+        expect(message.length).toBeLessThanOrEqual(2500);
       });
 
       // 분할된 메시지들을 합치면 원본과 동일
@@ -215,7 +215,7 @@ describe('splitMessage()', () => {
      * Task 6.22: 분할된 메시지 합치기 (백틱 제외 동일)
      */
     test('should preserve content when splitting and joining', () => {
-      const originalMessage = 'a'.repeat(3000) + '\n' + 'b'.repeat(3000) + '\n' + 'c'.repeat(1000);
+      const originalMessage = 'a'.repeat(2000) + '\n' + 'b'.repeat(2000) + '\n' + 'c'.repeat(2000) + '\n' + 'd'.repeat(500);
 
       const { messages } = splitMessage(originalMessage);
       const combined = messages.join('');

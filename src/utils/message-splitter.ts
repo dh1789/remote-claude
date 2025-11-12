@@ -70,11 +70,11 @@ export function convertBackticks(content: string): string {
  * Split large message into smaller chunks
  *
  * @param content - 분할할 텍스트 내용
- * @param maxLength - 최대 메시지 길이 (기본값: 3500자)
+ * @param maxLength - 최대 메시지 길이 (기본값: 2500자)
  * @returns SplitMessageResult - 분할된 메시지 배열 및 전체 개수
- * @description 대용량 메시지를 3500자 기준으로 자연스럽게 분할 (줄바꿈 기준)
+ * @description 대용량 메시지를 2500자 기준으로 자연스럽게 분할 (줄바꿈 기준)
  */
-export function splitMessage(content: string, maxLength: number = 3500): SplitMessageResult {
+export function splitMessage(content: string, maxLength: number = 2500): SplitMessageResult {
   const logger = getLogger();
 
   if (!content) {

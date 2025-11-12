@@ -451,7 +451,7 @@ export async function formatAndSendLargeMessage(
   } = {}
 ): Promise<void> {
   const {
-    maxLength = 3500,
+    maxLength = 2500,
     wrapCodeBlock = true,
     addIndicators = true,
     delayMs = 500,

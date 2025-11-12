@@ -1173,9 +1173,9 @@ class RemoteClaudeApp {
         statusMessage += `⚠️ 화면 캡처 실패: ${captureError instanceof Error ? captureError.message : '알 수 없는 오류'}`;
       }
 
-      // 대용량 메시지 분할 처리 (PRD FR-2.2: 3500자 기준)
-      // Split large messages (PRD FR-2.2: 3500 char limit)
-      const splitResult = splitMessage(statusMessage, 3500);
+      // 대용량 메시지 분할 처리 (PRD FR-2.2: 2500자 기준)
+      // Split large messages (PRD FR-2.2: 2500 char limit)
+      const splitResult = splitMessage(statusMessage, 2500);
 
       if (splitResult.totalParts > 1) {
         // 메시지가 분할된 경우: 분할 표시 추가 후 순차 전송
