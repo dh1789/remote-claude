@@ -1042,15 +1042,15 @@ class RemoteClaudeApp {
     const logger = getLogger();
     logger.info(`Status command from user ${userId} in channel ${channelId}`);
 
-    // 출력 라인 수 파싱 (기본값: 30줄)
-    // Parse output line count (default: 30 lines)
+    // 출력 라인 수 파싱 (기본값: 80줄)
+    // Parse output line count (default: 80 lines)
     const args = text.trim().split(/\s+/);
-    let lineCount = args.length > 0 && args[0] ? parseInt(args[0], 10) : 30;
+    let lineCount = args.length > 0 && args[0] ? parseInt(args[0], 10) : 80;
 
     // 유효성 검증 (1-200 범위)
     // Validate range (1-200)
     if (isNaN(lineCount) || lineCount < 1) {
-      lineCount = 30;
+      lineCount = 80;
     } else if (lineCount > 200) {
       lineCount = 200;
     }
