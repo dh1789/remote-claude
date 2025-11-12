@@ -520,12 +520,10 @@ export {
  * @description
  * 반환되는 blocks 배열 구조:
  * 1. Section 블록 - 메시지 텍스트 표시
- * 2. Actions 블록 1 - 5개 버튼 (상태, 파일, 취소, 엔터, 엔터*2)
- * 3. Actions 블록 2 - 4개 버튼 (방향키 4개)
+ * 2. Actions 블록 - 5개 버튼 (한 줄)
  *
  * 버튼 레이아웃:
- * 1행: [📊 상태] [📥 파일] [❌] [⏎] [⏎⏎]
- * 2행: [↑] [↓] [←] [→]
+ * [📊 상태] [📥 파일] [↓] [→] [⏎]
  */
 export function addInteractiveButtons(text: string): any[] {
   return [
@@ -537,7 +535,7 @@ export function addInteractiveButtons(text: string): any[] {
         text: text,
       },
     },
-    // 2. 첫 번째 actions 블록 (상태, 파일, 취소, 엔터, 엔터*2)
+    // 2. Actions 블록 - 5개 버튼 (한 줄)
     {
       type: 'actions',
       elements: [
@@ -554,45 +552,18 @@ export function addInteractiveButtons(text: string): any[] {
         },
         {
           type: 'button',
-          text: { type: 'plain_text', text: '❌' },
-          action_id: 'cancel_job',
-          style: 'danger',
-        },
-        {
-          type: 'button',
-          text: { type: 'plain_text', text: '⏎' },
-          action_id: 'send_enter',
-        },
-        {
-          type: 'button',
-          text: { type: 'plain_text', text: '⏎⏎' },
-          action_id: 'send_enter_twice',
-        },
-      ],
-    },
-    // 3. 두 번째 actions 블록 (방향키 4개)
-    {
-      type: 'actions',
-      elements: [
-        {
-          type: 'button',
-          text: { type: 'plain_text', text: '↑' },
-          action_id: 'send_up',
-        },
-        {
-          type: 'button',
           text: { type: 'plain_text', text: '↓' },
           action_id: 'send_down',
         },
         {
           type: 'button',
-          text: { type: 'plain_text', text: '←' },
-          action_id: 'send_left',
+          text: { type: 'plain_text', text: '→' },
+          action_id: 'send_right',
         },
         {
           type: 'button',
-          text: { type: 'plain_text', text: '→' },
-          action_id: 'send_right',
+          text: { type: 'plain_text', text: '⏎' },
+          action_id: 'send_enter',
         },
       ],
     },

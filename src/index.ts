@@ -1172,6 +1172,14 @@ class RemoteClaudeApp {
         statusMessage += `⚠️ 화면 캡처 실패: ${captureError instanceof Error ? captureError.message : '알 수 없는 오류'}`;
       }
 
+      // Slack Block Kit 텍스트 길이 제한 (3000자)
+      // 버튼이 정상적으로 렌더링되도록 메시지 길이 제한
+      const MAX_MESSAGE_LENGTH = 2800; // 여유를 두고 2800자로 제한
+      if (statusMessage.length > MAX_MESSAGE_LENGTH) {
+        statusMessage = statusMessage.substring(0, MAX_MESSAGE_LENGTH) + '\n\n... (메시지가 길어 일부 생략됨)';
+        logger.warn(`Status message truncated: ${statusMessage.length} chars exceeded ${MAX_MESSAGE_LENGTH} limit`);
+      }
+
       await say({
         text: statusMessage,
         blocks: addInteractiveButtons(statusMessage),
