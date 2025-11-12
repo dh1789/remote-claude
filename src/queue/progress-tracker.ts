@@ -73,7 +73,7 @@ export class ProgressTracker {
   private static readonly MAX_TIMEOUT = 60 * 60 * 1000;
 
   // 기본 출력 라인 수
-  private static readonly DEFAULT_OUTPUT_LINES = 50;
+  private static readonly DEFAULT_OUTPUT_LINES = 80;
 
   // 최대 tmux 실패 횟수 (연속 5회 실패 시 중단)
   private static readonly MAX_TMUX_FAILURES = 5;

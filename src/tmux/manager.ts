@@ -348,7 +348,7 @@ export class TmuxManager {
   public async captureAndParseOutput(
     sessionName: string,
     firstLines: number = 100,
-    lastLines: number = 50
+    lastLines: number = 80
   ): Promise<CaptureResult | null> {
     const logger = getLogger();
 

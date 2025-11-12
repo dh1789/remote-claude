@@ -368,7 +368,7 @@ export async function capturePane(
 
   // 환경 변수에서 기본 출력 라인 수 읽기
   // Read default output lines from environment variable
-  let defaultLines = 50; // 기본값
+  let defaultLines = 80; // 기본값
   const envLines = process.env.DEFAULT_OUTPUT_LINES;
 
   if (envLines) {
@@ -386,7 +386,7 @@ export async function capturePane(
         defaultLines = parsed;
       }
     } else {
-      logger.warn(`Invalid DEFAULT_OUTPUT_LINES value: ${envLines}, using default: 50`);
+      logger.warn(`Invalid DEFAULT_OUTPUT_LINES value: ${envLines}, using default: 80`);
     }
   }
 

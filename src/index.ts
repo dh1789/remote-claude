@@ -23,8 +23,7 @@ import { unsetupHandler } from './bot/commands/unsetup';
 import { snippetHandler } from './bot/commands/snippet';
 import { handleFileDownload } from './handlers/file-download';
 import { mapKoreanCommand } from './utils/korean-mapper';
-import { addInteractiveButtons } from './bot/formatters';
-import { splitMessage, addSplitIndicators, sendSplitMessages } from './utils/message-splitter';
+import { addInteractiveButtons, formatAndSendLargeMessage } from './bot/formatters';
 
 /**
  * 메인 애플리케이션 클래스
@@ -1175,22 +1174,13 @@ class RemoteClaudeApp {
 
       // 대용량 메시지 분할 처리 (PRD FR-2.2: 2500자 기준)
       // Split large messages (PRD FR-2.2: 2500 char limit)
-      const splitResult = splitMessage(statusMessage, 2500);
-
-      if (splitResult.totalParts > 1) {
-        // 메시지가 분할된 경우: 분할 표시 추가 후 순차 전송
-        // If message is split: add indicators and send sequentially
-        logger.info(`Status message split into ${splitResult.totalParts} parts`);
-        const messagesWithIndicators = addSplitIndicators(splitResult.messages);
-        await sendSplitMessages(this.app, channelId, messagesWithIndicators, 500);
-      } else {
-        // 메시지가 짧은 경우: 버튼과 함께 전송
-        // If message is short: send with interactive buttons
-        await say({
-          text: statusMessage,
-          blocks: addInteractiveButtons(statusMessage),
-        });
-      }
+      // 백틱 변환 + 코드 블록 감싸기 + 분할 표시 + 순차 전송
+      await formatAndSendLargeMessage(this.app, channelId, statusMessage, {
+        maxLength: 2500,
+        wrapCodeBlock: true,
+        addIndicators: true,
+        delayMs: 500,
+      });
     } catch (error) {
       logger.error(`Status command failed: ${error}`);
       const errorMessage = `❌ **상태 조회 실패**\n\n${error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'}`;

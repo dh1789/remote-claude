@@ -235,7 +235,7 @@ export function formatTable(data: Record<string, string>): string {
 export function formatOutputSummary(
   output: string,
   firstLines: number = 100,
-  lastLines: number = 50
+  lastLines: number = 80
 ): { formatted: string; isTruncated: boolean } {
   const lines = output.split('\n');
   const totalLines = lines.length;
