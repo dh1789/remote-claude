@@ -23,6 +23,23 @@ afterAll(() => {
   clearLoggerInstance();
 });
 
+/**
+ * blocks 형식의 메시지에서 텍스트 내용을 확인하는 헬퍼 함수
+ */
+function expectBlocksContaining(text: string) {
+  return expect.objectContaining({
+    blocks: expect.arrayContaining([
+      expect.objectContaining({
+        type: 'section',
+        text: expect.objectContaining({
+          type: 'mrkdwn',
+          text: expect.stringContaining(text),
+        }),
+      }),
+    ]),
+  });
+}
+
 // Mock Slack App 생성 헬퍼
 function createMockSlackApp() {
   return {
@@ -86,10 +103,9 @@ describe('ProgressTracker', () => {
       await tracker.startTracking(jobId, channelId, config);
 
       // 초기 메시지가 전송되었는지 확인
-      expect(mockSlackApp.client.chat.postMessage).toHaveBeenCalledWith({
-        channel: channelId,
-        text: expect.stringContaining('작업을 시작합니다'),
-      });
+      expect(mockSlackApp.client.chat.postMessage).toHaveBeenCalledWith(
+        expectBlocksContaining('작업을 시작합니다')
+      );
     });
 
     /**
@@ -203,9 +219,7 @@ describe('ProgressTracker', () => {
 
       // 타임아웃 메시지가 전송되었는지 확인
       expect(mockSlackApp.client.chat.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          text: expect.stringContaining('작업 시간이 초과되었습니다'),
-        })
+        expectBlocksContaining('작업 시간이 초과되었습니다')
       );
     });
   });
@@ -235,9 +249,7 @@ describe('ProgressTracker', () => {
 
       // tmux 에러 메시지가 전송되었는지 확인
       expect(mockSlackApp.client.chat.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          text: expect.stringContaining('tmux 세션 응답 없음'),
-        })
+        expectBlocksContaining('tmux 세션 응답 없음')
       );
     });
 

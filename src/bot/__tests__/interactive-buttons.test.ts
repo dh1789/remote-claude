@@ -307,12 +307,35 @@ describe('Interactive Buttons', () => {
 
     /**
      * Task 6.42: "📥 파일 다운로드" 버튼 → 모달 표시
+     * Note: handleQuickDownload now searches for files and shows dropdown modal
      */
     test('should open download modal', async () => {
       const mockSlackApp = createMockSlackApp();
+
+      // Mock file system for file search
+      const fs = require('fs');
+      const path = require('path');
+      const os = require('os');
+
+      // Create temp directory for mock project
+      const testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'button-test-'));
+      const projectDir = path.join(testDir, 'project');
+      fs.mkdirSync(projectDir, { recursive: true });
+
+      // Create some test files
+      fs.writeFileSync(path.join(projectDir, 'README.md'), 'test content');
+      fs.writeFileSync(path.join(projectDir, 'config.json'), '{}');
+
       const mockConfigStore = {
         hasChannel: jest.fn().mockReturnValue(true),
-        getChannel: jest.fn().mockReturnValue(createMockChannelConfig()),
+        getChannel: jest.fn().mockReturnValue({
+          channelId: 'C1234567890',
+          projectName: 'test-project',
+          projectPath: projectDir,
+          tmuxSession: 'test-session',
+          createdAt: new Date().toISOString(),
+          lastUsed: new Date().toISOString(),
+        }),
       } as unknown as ConfigStore;
 
       const body = createMockBlockActionBody('C1234567890', 'trigger-123');
@@ -328,6 +351,9 @@ describe('Interactive Buttons', () => {
           }),
         })
       );
+
+      // Cleanup
+      fs.rmSync(testDir, { recursive: true, force: true });
     });
   });
 
