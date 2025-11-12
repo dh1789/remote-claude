@@ -258,10 +258,23 @@ export async function sendSplitMessages(
 
     while (attempt < MAX_RETRIES && !sent) {
       try {
-        await app.client.chat.postMessage({
-          channel: channelId,
-          blocks: addInteractiveButtons(message),
-        });
+        // 마지막 메시지에만 버튼 추가
+        const isLastMessage = (i === messages.length - 1);
+
+        if (isLastMessage) {
+          // 마지막 메시지: text + blocks (버튼 포함)
+          await app.client.chat.postMessage({
+            channel: channelId,
+            text: message,
+            blocks: addInteractiveButtons(message),
+          });
+        } else {
+          // 중간 메시지: text만 (버튼 없음)
+          await app.client.chat.postMessage({
+            channel: channelId,
+            text: message,
+          });
+        }
 
         logger.debug(`Message ${messageNumber}/${messages.length} sent successfully`);
         sent = true;
@@ -299,9 +312,11 @@ export async function sendSplitMessages(
 
           // 사용자에게 전송 실패 알림
           try {
+            const failMessage = `⚠️ 메시지 전송 실패: [${messageNumber}]번째 메시지`;
             await app.client.chat.postMessage({
               channel: channelId,
-              blocks: addInteractiveButtons(`⚠️ 메시지 전송 실패: [${messageNumber}]번째 메시지`),
+              text: failMessage,
+              blocks: addInteractiveButtons(failMessage),
             });
           } catch (notifyError) {
             logger.error('Failed to send failure notification:', notifyError);
