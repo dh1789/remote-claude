@@ -319,10 +319,17 @@ export class TmuxManager {
       return sendResult;
     }
 
-    // 2. Enter 키 전송
-    const enterResult = await this.sendEnter(sessionName);
-    if (!enterResult.success) {
-      return enterResult;
+    // 2. Enter 키 2번 전송 (Claude Code 표준 입력 방식: 빈 줄 + Enter = 전송)
+    // 첫 번째 Enter: 현재 입력 줄 종료
+    const firstEnterResult = await this.sendEnter(sessionName);
+    if (!firstEnterResult.success) {
+      return firstEnterResult;
+    }
+
+    // 두 번째 Enter: 빈 줄로 전송 트리거
+    const secondEnterResult = await this.sendEnter(sessionName);
+    if (!secondEnterResult.success) {
+      return secondEnterResult;
     }
 
     // 3. 잠시 대기 (프롬프트가 처리될 시간)
