@@ -314,7 +314,11 @@ export class TmuxManager {
     logger.debug(`Prompt (first 200 chars): ${prompt.slice(0, 200)}${prompt.length > 200 ? '...' : ''}`);
 
     // 1. 프롬프트 전송 (리터럴 모드)
-    const sendResult = await this.sendKeys(sessionName, prompt, true);
+    // 멀티라인 메시지는 한 줄로 변환 (Claude Code가 Enter로 즉시 전송하므로)
+    const singleLinePrompt = prompt.replace(/\n/g, ' ');  // 줄바꿈을 공백으로 치환
+    logger.debug(`Single-line prompt: ${singleLinePrompt.slice(0, 200)}...`);
+
+    const sendResult = await this.sendKeys(sessionName, singleLinePrompt, true);
     if (!sendResult.success) {
       return sendResult;
     }
