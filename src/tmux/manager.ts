@@ -314,22 +314,17 @@ export class TmuxManager {
     logger.debug(`Prompt (first 200 chars): ${prompt.slice(0, 200)}${prompt.length > 200 ? '...' : ''}`);
 
     // 1. 프롬프트 전송
-    // 멀티라인 메시지는 paste-buffer 사용 (줄바꿈 보존)
+    // 멀티라인 메시지는 bracketed paste mode 사용 (줄바꿈 보존)
     if (prompt.includes('\n')) {
-      logger.info('Multiline prompt detected, using paste-buffer');
+      logger.info('Multiline prompt detected, using bracketed paste mode');
 
-      // 버퍼에 텍스트 로드
-      const loadResult = await executor.loadBuffer(prompt);
-      if (!loadResult.success) {
-        logger.error('Failed to load buffer');
-        return loadResult;
-      }
-
-      // 버퍼 붙여넣기
-      const pasteResult = await executor.pasteBuffer(sessionName);
-      if (!pasteResult.success) {
-        logger.error('Failed to paste buffer');
-        return pasteResult;
+      // Bracketed paste mode: ESC[200~ + text + ESC[201~
+      // 이렇게 하면 readline이 줄바꿈을 텍스트로 처리 (Enter 키가 아님)
+      const bracketedPrompt = `\x1b[200~${prompt}\x1b[201~`;
+      const sendResult = await this.sendKeys(sessionName, bracketedPrompt, true);
+      if (!sendResult.success) {
+        logger.error('Failed to send bracketed prompt');
+        return sendResult;
       }
     } else {
       // 단일 라인 메시지는 기존 방식 사용
