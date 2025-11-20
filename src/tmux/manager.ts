@@ -350,6 +350,11 @@ export class TmuxManager {
         logger.error('Failed to paste multiline prompt');
         return pasteResult;
       }
+
+      // tmux paste-buffer가 완전히 완료될 때까지 대기
+      // paste 작업이 완료되기 전에 Enter 키가 전송되는 것을 방지
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      logger.debug('Waited 200ms for paste operation to complete');
     } else {
       // 단일 라인 메시지는 기존 방식 사용
       logger.info('Single-line prompt, using send-keys');
