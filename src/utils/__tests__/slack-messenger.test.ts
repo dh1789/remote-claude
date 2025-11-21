@@ -195,4 +195,82 @@ describe('sendSlackMessage', () => {
       expect(app._mockPostMessage.mock.calls[0][0].text).toBe(message3000);
     });
   });
+
+  describe('Test 4: 블록 포함 지원', () => {
+    it('should send message with blocks', async () => {
+      // Arrange
+      const app = createMockApp();
+      const channelId = 'C123456';
+      const message = '블록과 함께 전송되는 메시지';
+      const blocks = [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: '*볼드 텍스트*',
+          },
+        },
+      ];
+
+      // Act
+      await sendSlackMessage(app, channelId, message, { blocks });
+
+      // Assert
+      expect(app._mockPostMessage).toHaveBeenCalledTimes(1);
+      expect(app._mockPostMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          channel: channelId,
+          text: message,
+          blocks: blocks,
+        })
+      );
+    });
+
+    it('should send blocks with split messages', async () => {
+      // Arrange
+      const app = createMockApp();
+      const channelId = 'C123456';
+      const message3000 = 'G'.repeat(3000);
+      const blocks = [
+        {
+          type: 'divider',
+        },
+      ];
+
+      // Act
+      await sendSlackMessage(app, channelId, message3000, { blocks });
+
+      // Assert
+      // 메시지는 분할되지만 블록은 첫 번째 메시지에만 포함
+      expect(app._mockPostMessage).toHaveBeenCalledTimes(2);
+
+      // 첫 번째 호출에만 블록 포함
+      const firstCall = app._mockPostMessage.mock.calls[0][0];
+      expect(firstCall.blocks).toEqual(blocks);
+
+      // 두 번째 호출에는 블록 없음
+      const secondCall = app._mockPostMessage.mock.calls[1][0];
+      expect(secondCall.blocks).toBeUndefined();
+    });
+
+    it('should handle empty blocks array', async () => {
+      // Arrange
+      const app = createMockApp();
+      const channelId = 'C123456';
+      const message = '빈 블록 배열 테스트';
+
+      // Act
+      await sendSlackMessage(app, channelId, message, { blocks: [] });
+
+      // Assert
+      expect(app._mockPostMessage).toHaveBeenCalledTimes(1);
+      expect(app._mockPostMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          channel: channelId,
+          text: message,
+          blocks: [],
+        })
+      );
+    });
+  });
 });

@@ -19,6 +19,8 @@ export interface SendMessageOptions {
  * Slack 메시지 전송 통합 함수
  * Test 1: 짧은 메시지는 일반 전송
  * Test 2: 긴 메시지는 자동 분할
+ * Test 3: autoSplit=false 동작
+ * Test 4: 블록 포함 지원
  */
 export async function sendSlackMessage(
   app: App,
@@ -28,13 +30,21 @@ export async function sendSlackMessage(
 ): Promise<void> {
   const maxLength = options?.maxLength ?? 2000;
   const autoSplit = options?.autoSplit ?? true;
+  const blocks = options?.blocks;
 
   // 자동 분할이 비활성화되었거나 메시지가 짧으면 그대로 전송
   if (!autoSplit || message.length <= maxLength) {
-    await app.client.chat.postMessage({
+    const payload: any = {
       channel: channelId,
       text: message,
-    });
+    };
+
+    // 블록이 있으면 포함
+    if (blocks !== undefined) {
+      payload.blocks = blocks;
+    }
+
+    await app.client.chat.postMessage(payload);
     return;
   }
 
@@ -63,10 +73,17 @@ export async function sendSlackMessage(
   }
 
   // 각 청크 전송
-  for (const chunk of chunks) {
-    await app.client.chat.postMessage({
+  for (let i = 0; i < chunks.length; i++) {
+    const payload: any = {
       channel: channelId,
-      text: chunk,
-    });
+      text: chunks[i],
+    };
+
+    // 첫 번째 청크에만 블록 포함
+    if (i === 0 && blocks !== undefined) {
+      payload.blocks = blocks;
+    }
+
+    await app.client.chat.postMessage(payload);
   }
 }
