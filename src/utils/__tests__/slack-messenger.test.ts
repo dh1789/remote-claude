@@ -135,4 +135,64 @@ describe('sendSlackMessage', () => {
       expect(app._mockPostMessage.mock.calls[2][0].text).not.toContain('... 이어짐');
     });
   });
+
+  describe('Test 3: autoSplit=false 동작', () => {
+    it('should send long message as-is when autoSplit=false', async () => {
+      // Arrange
+      const app = createMockApp();
+      const channelId = 'C123456';
+      const message3000 = 'D'.repeat(3000);
+
+      // Act
+      await sendSlackMessage(app, channelId, message3000, { autoSplit: false });
+
+      // Assert
+      // 분할 없이 1번만 호출
+      expect(app._mockPostMessage).toHaveBeenCalledTimes(1);
+      expect(app._mockPostMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          channel: channelId,
+          text: message3000,
+        })
+      );
+    });
+
+    it('should send very long message as-is when autoSplit=false', async () => {
+      // Arrange
+      const app = createMockApp();
+      const channelId = 'C123456';
+      const message10000 = 'E'.repeat(10000);
+
+      // Act
+      await sendSlackMessage(app, channelId, message10000, { autoSplit: false });
+
+      // Assert
+      // 분할 없이 1번만 호출
+      expect(app._mockPostMessage).toHaveBeenCalledTimes(1);
+
+      // 원본 메시지 그대로 전송 (표시 문자 없음)
+      const call = app._mockPostMessage.mock.calls[0][0];
+      expect(call.text).toBe(message10000);
+      expect(call.text).not.toContain('계속...');
+      expect(call.text).not.toContain('... 이어짐');
+    });
+
+    it('should respect autoSplit=false even with custom maxLength', async () => {
+      // Arrange
+      const app = createMockApp();
+      const channelId = 'C123456';
+      const message3000 = 'F'.repeat(3000);
+
+      // Act
+      await sendSlackMessage(app, channelId, message3000, {
+        autoSplit: false,
+        maxLength: 500,
+      });
+
+      // Assert
+      // autoSplit=false가 우선순위 - 분할 없이 1번만 호출
+      expect(app._mockPostMessage).toHaveBeenCalledTimes(1);
+      expect(app._mockPostMessage.mock.calls[0][0].text).toBe(message3000);
+    });
+  });
 });
