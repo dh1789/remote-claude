@@ -24,6 +24,7 @@ import { snippetHandler } from './bot/commands/snippet';
 import { handleFileDownload } from './handlers/file-download';
 import { mapKoreanCommand } from './utils/korean-mapper';
 import { addInteractiveButtons, formatAndSendLargeMessage } from './bot/formatters';
+import { sendSlackMessage } from './utils/slack-messenger';
 
 /**
  * 메인 애플리케이션 클래스
@@ -155,9 +156,8 @@ class RemoteClaudeApp {
         // 2. 빈 경로 입력 확인
         if (!filePath) {
           const usageText = '⚠️ 사용법: `/download <filepath>`\n\n예시:\n• `/download logs/app.log`\n• `/download src/index.ts`\n• `/download README.md`';
-          await this.app.client.chat.postMessage({
-            channel: channelId,
-            text: usageText,
+          await sendSlackMessage(this.app, channelId, usageText, {
+            autoSplit: false,
             blocks: addInteractiveButtons(usageText),
           });
           return;
@@ -168,9 +168,8 @@ class RemoteClaudeApp {
         if (!channelConfig) {
           logger.warn(`/download called in unconfigured channel: ${channelId}`);
           const setupText = '⚠️ 먼저 `/setup` 명령으로 프로젝트를 설정해주세요.';
-          await this.app.client.chat.postMessage({
-            channel: channelId,
-            text: setupText,
+          await sendSlackMessage(this.app, channelId, setupText, {
+            autoSplit: false,
             blocks: addInteractiveButtons(setupText),
           });
           return;
@@ -182,9 +181,8 @@ class RemoteClaudeApp {
       } catch (error) {
         logger.error(`/download command error: ${error}`);
         const errorText = `❌ 명령 처리 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`;
-        await this.app.client.chat.postMessage({
-          channel: channelId,
-          text: errorText,
+        await sendSlackMessage(this.app, channelId, errorText, {
+          autoSplit: false,
           blocks: addInteractiveButtons(errorText),
         });
       }
@@ -268,9 +266,8 @@ class RemoteClaudeApp {
       try {
         // 빈 경로 입력 확인
         if (!filePath) {
-          await this.app.client.chat.postMessage({
-            channel: channelId,
-            text: '⚠️ 사용법: `/애 <filepath>` 또는 `/download <filepath>`\n\n예시:\n• `/애 logs/app.log`\n• `/download src/index.ts`\n• `/download README.md`',
+          await sendSlackMessage(this.app, channelId, '⚠️ 사용법: `/애 <filepath>` 또는 `/download <filepath>`\n\n예시:\n• `/애 logs/app.log`\n• `/download src/index.ts`\n• `/download README.md`', {
+            autoSplit: false,
           });
           return;
         }
@@ -279,9 +276,8 @@ class RemoteClaudeApp {
         const channelConfig = this.configStore.getChannel(channelId);
         if (!channelConfig) {
           logger.warn(`/애 called in unconfigured channel: ${channelId}`);
-          await this.app.client.chat.postMessage({
-            channel: channelId,
-            text: '⚠️ 먼저 `/setup` 명령으로 프로젝트를 설정해주세요.',
+          await sendSlackMessage(this.app, channelId, '⚠️ 먼저 `/setup` 명령으로 프로젝트를 설정해주세요.', {
+            autoSplit: false,
           });
           return;
         }
@@ -291,9 +287,8 @@ class RemoteClaudeApp {
         await handleFileDownload(this.app, channelId, channelConfig, filePath);
       } catch (error) {
         logger.error(`/애 command error: ${error}`);
-        await this.app.client.chat.postMessage({
-          channel: channelId,
-          text: `❌ 명령 처리 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`,
+        await sendSlackMessage(this.app, channelId, `❌ 명령 처리 중 오류가 발생했습니다: ${error instanceof Error ? error.message : String(error)}`, {
+          autoSplit: false,
         });
       }
     });
