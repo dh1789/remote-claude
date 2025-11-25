@@ -278,6 +278,24 @@ export async function sendArrowKey(
 }
 
 /**
+ * tmux 세션에 Escape 키 전송
+ * Send Escape key to tmux session
+ *
+ * @param sessionName - Session name
+ * @returns TmuxCommandResult
+ *
+ * 사용 예시 (Usage examples):
+ * - sendEscape('my-session') → Escape 키 전송 (Claude Code 작업 취소)
+ */
+export async function sendEscape(sessionName: string): Promise<TmuxCommandResult> {
+  const logger = getLogger();
+  logger.debug(`Sending Escape key to session ${sessionName}`);
+
+  const command = `tmux send-keys -t ${sessionName} Escape`;
+  return executeTmuxCommand(command);
+}
+
+/**
  * 파싱된 명령 시퀀스를 순차적으로 실행
  * Execute parsed command sequence sequentially
  *

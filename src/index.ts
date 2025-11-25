@@ -73,6 +73,7 @@ class RemoteClaudeApp {
       this.jobQueue,
       this.stateManager,
       this.tmuxManager,
+      this.configStore,
       this.app
     );
 

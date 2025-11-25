@@ -8,6 +8,7 @@ import { Job, JobStatus, ChannelConfig } from '../types';
 import { JobQueue } from './queue';
 import { StateManager } from '../state/manager';
 import { TmuxManager } from '../tmux/manager';
+import { ConfigStore } from '../config/store';
 import { getLogger } from '../utils/logger';
 import {
   formatInProgress,
@@ -31,6 +32,7 @@ import {
 import {
   executeCommandSequence,
   capturePane,
+  sendEscape,
 } from '../tmux/executor';
 import {
   processCaptureResult,
@@ -47,6 +49,7 @@ export class JobOrchestrator {
   private jobQueue: JobQueue;
   private stateManager: StateManager;
   private tmuxManager: TmuxManager;
+  private configStore: ConfigStore;
   private slackApp: App;
 
   // 실행 중인 작업 추적 (channelId -> Job)
@@ -56,11 +59,13 @@ export class JobOrchestrator {
     jobQueue: JobQueue,
     stateManager: StateManager,
     tmuxManager: TmuxManager,
+    configStore: ConfigStore,
     slackApp: App
   ) {
     this.jobQueue = jobQueue;
     this.stateManager = stateManager;
     this.tmuxManager = tmuxManager;
+    this.configStore = configStore;
     this.slackApp = slackApp;
     this.runningJobs = new Map();
   }
@@ -332,6 +337,9 @@ export class JobOrchestrator {
   /**
    * 작업 취소
    * Cancel job
+   *
+   * Claude Code에 Escape 키를 전송하여 실행 중인 작업을 취소합니다.
+   * Sends Escape key to Claude Code to cancel running job.
    */
   public async cancelJob(channelId: string): Promise<boolean> {
     const logger = getLogger();
@@ -340,6 +348,27 @@ export class JobOrchestrator {
     if (!runningJob) {
       logger.warn(`No running job to cancel for channel: ${channelId}`);
       return false;
+    }
+
+    // channelConfig 가져오기
+    const channelConfig = this.configStore.getChannel(channelId);
+
+    if (channelConfig) {
+      // Claude Code에 Escape 키 전송하여 작업 취소
+      try {
+        logger.info(`Sending Escape key to cancel job: ${runningJob.id}`);
+        const escapeResult = await sendEscape(channelConfig.tmuxSession);
+
+        if (escapeResult.success) {
+          logger.info(`Escape key sent successfully to session: ${channelConfig.tmuxSession}`);
+        } else {
+          logger.warn(`Failed to send Escape key: ${escapeResult.error}`);
+        }
+      } catch (error) {
+        logger.error(`Error sending Escape key: ${error}`);
+      }
+    } else {
+      logger.warn(`Channel config not found for channel: ${channelId}`);
     }
 
     this.jobQueue.updateJobStatus(runningJob.id, JobStatus.CANCELLED);
