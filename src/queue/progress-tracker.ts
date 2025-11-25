@@ -132,8 +132,10 @@ export class ProgressTracker {
     try {
       // 초기 메시지 전송
       const initialMessage = formatWaiting('작업을 시작합니다...');
+      // Note: Using direct chat.postMessage here because we need the ts for message updates
       const result = await this.slackApp.client.chat.postMessage({
         channel: channelId,
+        text: initialMessage,
         blocks: addInteractiveButtons(initialMessage),
       });
 

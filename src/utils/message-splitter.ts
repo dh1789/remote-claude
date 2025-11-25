@@ -6,6 +6,7 @@
 import { App } from '@slack/bolt';
 import { getLogger } from './logger';
 import { addInteractiveButtons } from '../bot/formatters';
+import { sendSlackMessage } from './slack-messenger';
 
 /**
  * 분할 메시지 결과
@@ -263,16 +264,14 @@ export async function sendSplitMessages(
 
         if (isLastMessage) {
           // 마지막 메시지: text + blocks (버튼 포함)
-          await app.client.chat.postMessage({
-            channel: channelId,
-            text: message,
+          await sendSlackMessage(app, channelId, message, {
+            autoSplit: false,
             blocks: addInteractiveButtons(message),
           });
         } else {
           // 중간 메시지: text만 (버튼 없음)
-          await app.client.chat.postMessage({
-            channel: channelId,
-            text: message,
+          await sendSlackMessage(app, channelId, message, {
+            autoSplit: false,
           });
         }
 
@@ -313,9 +312,8 @@ export async function sendSplitMessages(
           // 사용자에게 전송 실패 알림
           try {
             const failMessage = `⚠️ 메시지 전송 실패: [${messageNumber}]번째 메시지`;
-            await app.client.chat.postMessage({
-              channel: channelId,
-              text: failMessage,
+            await sendSlackMessage(app, channelId, failMessage, {
+              autoSplit: false,
               blocks: addInteractiveButtons(failMessage),
             });
           } catch (notifyError) {
