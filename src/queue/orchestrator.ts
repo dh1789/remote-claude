@@ -10,6 +10,7 @@ import { StateManager } from '../state/manager';
 import { TmuxManager } from '../tmux/manager';
 import { ConfigStore } from '../config/store';
 import { getLogger } from '../utils/logger';
+import { promises as fs } from 'fs';
 import {
   formatInProgress,
   formatSuccess,
@@ -148,6 +149,10 @@ export class JobOrchestrator {
 
       // 실패 메시지 전송
       await this.sendJobFailureMessage(channelId, job, error);
+    } finally {
+      // 임시 파일 정리 (FR-12: Job 완료/실패 시 임시 파일 삭제)
+      // Clean up temporary file (FR-12: Delete temp file on job completion/failure)
+      await this.cleanupTempFile(job.attachedFilePath);
     }
   }
 
@@ -374,6 +379,10 @@ export class JobOrchestrator {
     this.jobQueue.updateJobStatus(runningJob.id, JobStatus.CANCELLED);
     this.runningJobs.delete(channelId);
     this.stateManager.clearSession(channelId);
+
+    // 임시 파일 정리 (FR-12: Job 취소 시에도 임시 파일 삭제)
+    // Clean up temporary file (FR-12: Delete temp file on job cancellation)
+    await this.cleanupTempFile(runningJob.attachedFilePath);
 
     logger.info(`Job cancelled: ${runningJob.id}`);
     return true;
@@ -752,6 +761,37 @@ export class JobOrchestrator {
       });
     } catch (error) {
       getLogger().error(`Failed to send DSL guide: ${error}`);
+    }
+  }
+
+  /**
+   * 임시 파일 정리 (Task 5.4 & 5.5, FR-12)
+   * Clean up temporary file
+   *
+   * @param filePath - 삭제할 파일 경로
+   */
+  private async cleanupTempFile(filePath?: string): Promise<void> {
+    if (!filePath) {
+      return;
+    }
+
+    const logger = getLogger();
+    logger.info(`Cleaning up temporary file: ${filePath}`);
+
+    try {
+      await fs.unlink(filePath);
+      logger.info(`Temporary file deleted successfully: ${filePath}`);
+    } catch (error: unknown) {
+      const err = error as NodeJS.ErrnoException;
+      // 파일이 이미 없으면 경고만 로그
+      // If file doesn't exist, just log a warning
+      if (err.code === 'ENOENT') {
+        logger.warn(`Temporary file not found (already deleted): ${filePath}`);
+      } else {
+        // 다른 에러는 에러 로그 (하지만 계속 진행)
+        // Other errors are logged but we continue
+        logger.error(`Failed to delete temporary file ${filePath}: ${err.message}`);
+      }
     }
   }
 }

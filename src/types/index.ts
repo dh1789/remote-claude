@@ -75,6 +75,7 @@ export interface Job {
   startedAt?: string;
   completedAt?: string;
   error?: string;
+  attachedFilePath?: string; // 첨부된 파일의 임시 저장 경로 (Task 5.1)
 }
 
 /**

@@ -22,6 +22,7 @@ import { helpHandler } from './bot/commands/help';
 import { unsetupHandler } from './bot/commands/unsetup';
 import { snippetHandler } from './bot/commands/snippet';
 import { handleFileDownload } from './handlers/file-download';
+import { handleFileAttachment } from './handlers/file-attachment';
 import { mapKoreanCommand } from './utils/korean-mapper';
 import { addInteractiveButtons, formatAndSendLargeMessage } from './bot/formatters';
 import { sendSlackMessage } from './utils/slack-messenger';
@@ -329,6 +330,29 @@ class RemoteClaudeApp {
       const channelId = message.channel;
       const text = message.text?.trim() || '';
 
+      // 파일 첨부 감지 및 처리 (FR-1, Task 5.2 & 5.3)
+      // Detect and process file attachments (FR-1, Task 5.2 & 5.3)
+      if ('files' in message && message.files && message.files.length > 0) {
+        logger.info(`File attachment detected in channel ${channelId}: ${message.files.length} file(s)`);
+
+        // 채널 설정 확인
+        const channelConfig = this.configStore.getChannel(channelId);
+        if (!channelConfig) {
+          logger.debug(`File attachment from unconfigured channel: ${channelId}`);
+          return;
+        }
+
+        try {
+          await this.handleFileAttachmentMessage(channelId, channelConfig, message, say);
+        } catch (error) {
+          logger.error(`Failed to handle file attachment: ${error}`);
+          await say(
+            `❌ 파일 처리 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
+          );
+        }
+        return;
+      }
+
       // 디버깅: 줄바꿈 확인
       // Debug: Check for newlines
       if (text.includes('\n')) {
@@ -586,6 +610,70 @@ class RemoteClaudeApp {
     );
 
     // 오케스트레이터 시작 (백그라운드)
+    this.orchestrator.startJob(channelId, channelConfig).catch((error) => {
+      logger.error(`Failed to start job ${job.id}: ${error}`);
+    });
+  }
+
+  /**
+   * 파일 첨부 메시지 처리 (Task 5.2 & 5.3)
+   * Handle file attachment message
+   */
+  private async handleFileAttachmentMessage(
+    channelId: string,
+    channelConfig: ChannelConfig,
+    message: any,
+    say: any
+  ): Promise<void> {
+    const logger = getLogger();
+    const envConfig = getEnvConfig();
+
+    // handleFileAttachment() 호출하여 파일 처리
+    // Call handleFileAttachment() to process file
+    const result = await handleFileAttachment(
+      {
+        text: message.text || '',
+        files: message.files,
+      },
+      envConfig.slackBotToken
+    );
+
+    // 파일 처리 실패
+    // File processing failed
+    if (!result.success) {
+      logger.warn(`File attachment processing failed: ${result.error}`);
+      await say(
+        `❌ **파일 처리 실패**\n\n` +
+        `${result.error || '알 수 없는 오류가 발생했습니다.'}`
+      );
+      return;
+    }
+
+    // 파일 처리 성공 - 프롬프트를 Job Queue에 추가 (FR-10)
+    // File processing succeeded - Add prompt to Job Queue (FR-10)
+    logger.info(`File attachment processed successfully: ${result.filePath}`);
+
+    const job = this.jobQueue.addJob(
+      channelId,
+      JobType.ASK_PROMPT,
+      result.prompt || ''
+    );
+
+    // Job에 첨부 파일 경로 저장 (FR-12에서 정리용)
+    // Save attached file path in Job (for cleanup in FR-12)
+    job.attachedFilePath = result.filePath;
+
+    await say(
+      `✅ **파일 첨부 작업 추가됨**\n\n` +
+      `**작업 ID**: ${job.id}\n` +
+      `**프로젝트**: ${channelConfig.projectName}\n` +
+      `**파일**: ${message.files[0].name}\n` +
+      `**프롬프트**: ${message.text?.slice(0, 100)}${(message.text?.length || 0) > 100 ? '...' : ''}\n\n` +
+      '파일이 처리되었습니다. 작업이 곧 실행됩니다.'
+    );
+
+    // 오케스트레이터 시작 (백그라운드)
+    // Start orchestrator (background)
     this.orchestrator.startJob(channelId, channelConfig).catch((error) => {
       logger.error(`Failed to start job ${job.id}: ${error}`);
     });

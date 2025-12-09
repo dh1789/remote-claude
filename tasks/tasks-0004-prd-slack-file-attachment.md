@@ -89,12 +89,12 @@
   - [x] 4.9 파일 첨부 핸들러 단위 테스트 전체 실행 및 검증
 
 - [ ] 5.0 시스템 통합 및 임시 파일 정리 (FR-10, FR-12, FR-13)
-  - [ ] 5.1 `src/types/index.ts` Job 인터페이스에 attachedFilePath 필드 추가
-  - [ ] 5.2 `src/index.ts` 파일 이벤트 핸들러 테스트 작성 (message 이벤트에서 files 배열 감지)
-  - [ ] 5.3 `src/index.ts` Slack 메시지 이벤트 핸들러 수정 (handleFileAttachment() 호출 추가)
-  - [ ] 5.4 `src/queue/orchestrator.ts` Job 정리 로직 테스트 작성 (Job 완료/실패/취소 시 임시 파일 삭제)
-  - [ ] 5.5 `src/queue/orchestrator.ts` cleanupTempFile() 함수 구현 및 executeJob()에 try-catch-finally 패턴 적용
-  - [ ] 5.6 로깅 추가 (파일 다운로드 시작/완료, 파일 정보, 임시 파일 경로, 에러)
+  - [x] 5.1 `src/types/index.ts` Job 인터페이스에 attachedFilePath 필드 추가
+  - [x] 5.2 `src/index.ts` 파일 이벤트 핸들러 테스트 작성 (message 이벤트에서 files 배열 감지)
+  - [x] 5.3 `src/index.ts` Slack 메시지 이벤트 핸들러 수정 (handleFileAttachment() 호출 추가)
+  - [x] 5.4 `src/queue/orchestrator.ts` Job 정리 로직 테스트 작성 (Job 완료/실패/취소 시 임시 파일 삭제)
+  - [x] 5.5 `src/queue/orchestrator.ts` cleanupTempFile() 함수 구현 및 executeJob()에 try-catch-finally 패턴 적용
+  - [x] 5.6 로깅 추가 (파일 다운로드 시작/완료, 파일 정보, 임시 파일 경로, 에러)
   - [ ] 5.7 시스템 테스트 작성 - US-1: 이미지 첨부 워크플로우 (PNG + "이 이미지를 분석해줘")
   - [ ] 5.8 시스템 테스트 작성 - US-3: 로그 파일 첨부 워크플로우 (.log + "이 로그를 분석해줘")
   - [ ] 5.9 시스템 테스트 작성 - US-6: Space 키 워크플로우 (`` `s` `` 입력 → Space 키 실행)
