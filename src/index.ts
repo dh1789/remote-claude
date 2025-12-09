@@ -322,15 +322,15 @@ class RemoteClaudeApp {
 
     // 채널 메시지 수신 (4단계 입력 처리 파이프라인 통합)
     this.app.message(async ({ message, say }) => {
-      // 메시지 타입 검증
-      if (message.subtype || !('text' in message) || !('channel' in message)) {
+      // 채널 정보 확인
+      if (!('channel' in message)) {
         return;
       }
 
       const channelId = message.channel;
-      const text = message.text?.trim() || '';
 
       // 파일 첨부 감지 및 처리 (FR-1, Task 5.2 & 5.3)
+      // file_share subtype 메시지는 파일 첨부로 처리
       // Detect and process file attachments (FR-1, Task 5.2 & 5.3)
       if ('files' in message && message.files && message.files.length > 0) {
         logger.info(`File attachment detected in channel ${channelId}: ${message.files.length} file(s)`);
@@ -352,6 +352,14 @@ class RemoteClaudeApp {
         }
         return;
       }
+
+      // 일반 메시지 처리 - subtype이 있거나 text가 없으면 무시
+      // Process regular messages - ignore if has subtype or no text
+      if (message.subtype || !('text' in message)) {
+        return;
+      }
+
+      const text = message.text?.trim() || '';
 
       // 디버깅: 줄바꿈 확인
       // Debug: Check for newlines
